@@ -1,0 +1,196 @@
+---------------------------------------------------------------------------
+CHAPTER 2 - DATA MODELS & QUERY LANGUAGES
+---------------------------------------------------------------------------
+
+- History of Database Technologies
+
+    - Edgar Codd proposed the relational model (1970)
+        - Data is organized into relations (tables)
+        - Each relation is an unordered collection of tuples (rows)
+
+    - Relational DBMS's become the tool of choice for business data processing (mid 80s)
+        - Transaction processing
+        - Batch processing
+
+    - Network model and hierarchical model become main alternatives to relational (late 70s)
+        - IBM's 'Information Management System' (1968) used hierarchical model similar to document
+        - 
+
+    - NoSQL (mostly a combination of document and graph DBs) emerges as alternative (early 2010s)
+        - Need for greater scalability to handle large datasets or high write throughput
+        - Specialized query operations not well-supported by relational model
+        - Desire to break out of restrictiveness of relational model
+
+
+
+- Relational model vs Document model
+
+    - Relational Model
+        - Puts constraints on the schema of the data (schema-on-write)
+        - Requires joins to combine data
+        - Handles many-to-many relationships much better
+        
+    - Document Model
+        - Very flexible, doesn't impose constraints when writing data (schema-on-read)
+        - Load entire document at once, which is fast since it doesn't require joins
+        - Doesn't handle many-to-many relationships well
+
+
+
+- The Network Model
+
+    - The network model was standardized by CODASYL (1969)
+    - Links between records were implemented as pointers rather than foreign keys
+    - Queries were performed by manually moving a cursor
+    - Application code had to keep track of data relationships
+    - Made for a complex, inflexible model, but worked on 70s technologies like tape drives
+
+
+
+- The Relational Model
+
+    - Simple model consisted of tables and tuples
+    - Query optimizer automatically decides which parts of query to execute and in which order
+    - Can add index to speed up queries, don't need to rewrite queries
+
+
+
+- Convergence of Document and Relational Databasese
+
+    - Most relational databases have supported XML data types since the mid 2000s
+    - Many relational databases now support JSON as well
+    - Some MongoDB drivers now automatically resolve references to other docuements
+
+
+
+- SQL
+
+    - Based on relational algebra
+
+        sharks = SIGMA[family = 'Sharks'] (animals)
+                            |
+                            V
+        SELECT * FROM ANIMALS WHERE family = 'Sharks';
+
+
+    - Declarative query language
+        - Just specify the pattern of the data you want, not how to get it
+        - More concise and easier to work with than an imperative API
+        - Hides implementation details of database engine
+        - Doesn't guarantee any particular ordering
+        - Lends itself well to parallel execution
+
+
+
+- MapReduce Querying
+
+    - Programming model for processing large amounts of data in bulk across many machines
+    - Hybrid between declarative and imperative query language
+    - The 'map' and 'reduce' functions are pure, with no side effects allowed
+
+
+    # Postgres query to get sharks sighted per month
+    SELECT date_trunc('month', observation_timestamp) AS observation_month,
+       sum(num_animals) AS total_animals
+    FROM observations
+    WHERE family = 'Sharks'
+    GROUP BY observation_month;
+
+    
+    # MongoDB MapReduce query to get same data
+    db.observations.mapReduce(
+        function map() { 2
+            var year  = this.observationTimestamp.getFullYear();
+            var month = this.observationTimestamp.getMonth() + 1;
+            emit(year + "-" + month, this.numAnimals); 3
+        },
+        function reduce(key, values) { 4
+            return Array.sum(values); 5
+        },
+        {
+            query: { family: "Sharks" }, 1
+            out: "monthlySharkReport" 6
+        }
+    );
+
+
+
+- Graph-like Data Models
+
+    - Used when many-to-many relationships are very common in data
+    - Useful when connections within data become very complex
+    - Examples include social graphs, web graphs, road or rail networks
+    - Lots of well-known graph algorithms exist (ie shortest distance between points or PageRank)
+    - There are 2 main ways of storing graph data (Property Graph model and Triple-Store model)
+
+
+
+- Property Graphs Model
+
+    - Popular implementations include Neo4j, Titan, and InfiniteGraph
+    - Gives graphs a lot of flexibility for data modeling
+
+    - Each vertex is an entity 
+        - unique id
+        - collection of properties
+        - set of incoming edges
+        - set of outgoing edges
+
+    - Each edge is a relationship
+        - unique id
+        - vertex where edge starts (tail vertex)
+        - vertex where edge ends (head vertex)
+        - label to describe relationships
+        - collection of properties
+
+
+    # Neo4j Cypher query to create graph data
+    CREATE
+      (NAmerica:Location {name:'North America', type:'continent'}),
+      (USA:Location      {name:'United States', type:'country'  }),
+      (Idaho:Location    {name:'Idaho',         type:'state'    }),
+      (Lucy:Person       {name:'Lucy' }),
+      (Idaho) -[:WITHIN]->  (USA)  -[:WITHIN]-> (NAmerica),
+      (Lucy)  -[:BORN_IN]-> (Idaho)
+
+
+    # Cypher query to find people who emigrated from US to Europe
+    MATCH
+      (person) -[:BORN_IN]->  () -[:WITHIN*0..]-> (us:Location {name:'United States'}),
+      (person) -[:LIVES_IN]-> () -[:WITHIN*0..]-> (eu:Location {name:'Europe'})
+    RETURN person.name
+
+
+    - Can be implemented in relational databases, but its awkward
+        - Can be represented in a relational db with 2 tables, VERTICES and EDGES
+        - Many relational dbs implement the WITH RECURSIVE keyword for graph traversal
+
+
+
+- Triple-Store Model
+
+    - Popular implementations include Datomic and AllegroGraph
+    - Commonly associated with the Semantic Web and the RDF data model
+
+    - All information is stored in simple 3 part statements (subject, predicate, object)
+        - ie (Jim, likes, bananas)
+        - subject = vertex
+        - predicate = edge
+        - object = another vertex
+
+
+    # Turtle format for specifying triple-stores
+    @prefix : <urn:example:>.
+    _:lucy     a :Person;   :name "Lucy";          :bornIn _:idaho.
+    _:idaho    a :Location; :name "Idaho";         :type "state";   :within _:usa.
+    _:usa      a :Location; :name "United States"; :type "country"; :within _:namerica.
+    _:namerica a :Location; :name "North America"; :type "continent".
+
+
+    # SPARQL query to find people who emigrated from the US to Europe
+    PREFIX : <urn:example:>
+    SELECT ?personName WHERE {
+      ?person :name ?personName.
+      ?person :bornIn  / :within* / :name "United States".
+      ?person :livesIn / :within* / :name "Europe".
+    }
