@@ -1,0 +1,181 @@
+---------------------------------------------------
+CHAPTER 9 - INSPECTING & MODIFYING DATA
+---------------------------------------------------
+
+- Importing Data on Meat, Poultry, and Egg Producers
+
+    # Create table for government data
+    CREATE TABLE meat_poultry_egg_inspect (
+        est_number varchar(50) CONSTRAINT est_number_key PRIMARY KEY,
+        company varchar(100),
+        street varchar(100),
+        city varchar(30),
+        st varchar(2),
+        zip varchar(5),
+        phone varchar(14),
+        grant_date date,
+        activities text,
+        dbas text
+    );
+
+
+    # Copy data into table
+    COPY meat_poultry_egg_inspect
+    FROM '~/Directory/MPI_Directory_by_Establishment_Name.csv'
+    WITH (FORMAT CSV, HEADER, DELIMITER ',');
+
+
+    # Create index to speed up queries
+    CREATE INDEX company_idx ON meat_poultry_egg_inspect (company);
+
+
+
+- Interviewing the Data Set
+
+    At first glance, we may assume that each company in each row operates at a disctinct
+      address.  But, it's never safe to assume in data analysis, so let's check.
+
+    SELECT company,
+           street,
+           city,
+           st, 
+           count(*) AS address_count
+    FROM meat_poultry_egg_inspect
+    GROUP BY company, street, city, st
+    HAVING count(*) > 1
+    ORDER BY company, street, city, st;
+
+
+    The query returns 23 rows, which means there are close to two dozen cases where the same
+      company is listed multiple times at the same address.
+
+    company                   street                 city          st   address_count
+    -----------------------   --------------------   -----------   --   -------------
+    Acre Station Meat Farm    17076 Hwy 32 N         Pinetown      NC               2
+    Beltex Corporation        3801 North Grove St    Fort Worth    TX               2
+    Cloverleaf Cold Storage   111 Imperial Drive     Sanford       NC               2
+    --snip--
+
+
+
+- Checking for Missing Values
+
+    Let's start checking for missing values by asking a basic question: how many of the meat,
+      poultry, and egg processing companies are in each state?
+
+    SELECT st,
+           COUNT(*) AS st_count
+    FROM meat_poultry_egg_inspect
+    GROUP BY st
+    ORDER BY st;
+
+
+    Here, we can see that there are 3 rows without a value for 'st'.
+
+    st    st_count
+    --    --------
+    AK          17
+    AL          93
+    AR          87
+    AS           1
+    --snip--
+    WA         139
+    WI         184
+    WV          23
+    WY           1
+                 3
+
+
+    To take a look at these, let's query the rows with a NULL value.
+
+    SELECT est_number, 
+           company,
+           city,
+           st,
+           zip
+    FROM meat_poultry_egg_inspect
+    WHERE st IS NULL;
+
+
+    est_number          company                           city      st   zip
+    -----------------   -------------------------------   -------   --   -------
+    V18677A             Atlas Inspection, Inc.            Blaine         55449
+    M45319+P45319       Hall-Naime Packing Company, Inc                  36671
+    M263A+P263A+V263A   Jones Dairy Farm                                 53538
+
+
+
+- Checking for Inconsistent Data Values
+
+    Inconsistent data is another factor that can hamper our analysis.  We can check for 
+      inconsistently entered data within a column by using GROUP BY with count().  When we
+      scan the unduplicated values in the results, we might be able to spot variations in 
+      the spelling of names or other attributes.
+
+    SELECT company,
+           count(*) AS company_count
+    FROM meat_poultry_egg_inspect
+    GROUP BY company
+    ORDER BY company ASC;
+
+
+    At least 4 different spellings are shown for 7 establishments that are likely owned
+      by the same company.
+
+    company                        company_count
+    --------------------------    -------------
+    -snip--
+    rmour - Eckrich Meats, LLC                1
+    rmour-Eckrich Meats LLC                   3
+    rmour-Eckrich Meats, Inc.                 1
+    rmour-Eckrich Meats, LLC                  2
+    -snip--
+
+
+
+- Checking for Malformed Values Using length()
+
+    It's a good idea to check for unexpected values in a column that should be consistently
+      formatted.  For example, each entry in the 'zip' column in the 'meat_poultry_egg_inspect'
+      table should be formatted in the style of a US zip with 5 digits.
+
+    SELECT length(zip),
+           count(*) AS length_count
+    FROM meat_poultry_egg_inspect
+    GROUP BY length(zip)
+    ORDER BY length(zip) ASC;
+
+
+    As we can see, there are many zip codes that are not formatted in the standard way.
+
+    length    length_count
+    ------    ------------
+         3              86
+         4             496
+         5            5705
+
+
+    Now we can take a look at the states that contain zips without standard formatting.
+
+    SELECT st, 
+           count(*) AS st_count
+    FROM meat_poultry_egg_inspect
+    WHERE length(zip) < 5
+    GROUP BY st
+    ORDER BY st ASC;
+
+
+    The states missing 5-digit zip codes are largely in the Northeast region of the US where
+      zip codes often start with a zero.  This is likely due to the file conversion.
+
+    st    st_count
+    --    --------
+    CT          55
+    MA         101
+    ME          24
+    NH          18
+    NJ         244
+    PR          84
+    RI          27
+    VI           2
+    VT          27
