@@ -179,3 +179,124 @@ CHAPTER 9 - INSPECTING & MODIFYING DATA
     RI          27
     VI           2
     VT          27
+
+
+
+- Modifying Tables with ALTER TABLE
+
+    # Add a column
+    ALTER TABLE table ADD COLUMN column data_type;
+
+    # Remove a column
+    ALTER TABLE table DROP COLUMN column;
+
+    # Change a column's data type
+    ALTER TABLE table ALTER COLUMN column SET DATA TYPE data_type;
+
+    # Add a NOT NULL constraint
+    ALTER TABLE table ALTER COLUMN column SET NOT NULL;
+
+    # Remove a NOT NULL constraint
+    ALTER TABLE table ALTER COLUMN column DROP NOT NULL;
+
+
+
+- Modifying Values with Update
+
+    # Update a single column
+    UPDATE table
+    SET column = value;
+
+
+    # Update multiple columns
+    UPDATE table
+    SET column_a = value,
+        column_b = value;
+
+
+    # Filter the rows to update
+    UPDATE table
+    SET column = value
+    WHERE criteria;
+
+
+    # Update one table with values from another table (ANSI SQL)
+    UPDATE table
+    SET column = (SELECT column
+                  FROM table_b
+                  WHERE table.column = table_b.column)
+    WHERE EXISTS (SELECT column
+                  FROM table_b
+                  WHERE table.column = table_b.column);
+
+
+    # Update one table with values from another table (simpler Postgres syntax)
+    UPDATE table
+    SET column = table_b.column
+    FROM table_b
+    WHERE table.column = table_b.column;
+
+
+
+- Creating Backup Tables
+
+    Before modifying a table, it's a good idea to make a copy for reference and backup in case
+      you accidentally destroy some data.
+
+
+    # Create backup table
+    CREATE TABLE meat_poultry_egg_inspect_backup AS
+    SELECT * FROM meat_poultry_egg_inspect;
+
+
+    # Confirm that the original and backup tables have the same number of rows
+    SELECT
+        (SELECT count(*) FROM meat_poultry_egg_inspect) AS original,
+        (SELECT count(*) FROM meat_poultry_egg_inspect_backup) AS backup;
+
+
+
+- Restoring Missing Column Values
+
+    # Create a column copy for backup
+    ALTER TABLE meat_poultry_egg_inspect ADD COLUMN st_copy varchar(2);
+
+
+    # Copy existing column to backup
+    UPDATE mear_poultry_egg_inspect
+    SET st_copy = st;
+
+
+    # Confirm that the backup succeeded
+    SELECT st, st_copy
+    FROM meat_poultry_egg_inspect
+    ORDER BY st;
+
+
+    # Update rows where state was missing
+    UPDATE meat_poultry_egg_inspect
+    SET st = 'MN'
+    WHERE est_number = 'V18677A';
+
+    UPDATE meat_poultry_egg_inspect
+    SET st = 'AL'
+    WHERE est_number = 'M45319+P45319';
+
+    UPDATE meat_poultry_egg_inspect
+    SET st = 'WI'
+    WHERE est_number = 'M263A+P263A+V263A';
+
+
+
+- Restoring Backup Values
+
+    # Restore from the backup column
+    UPDATE meat_poultry_egg_inspect
+    SET st = st_copy;
+
+
+    # Restore from the backup table
+    UPDATE meat_poultry_egg_inspect original
+    SET st = backup.st
+    FROM meat_poultry_egg_inspect_backup backup
+    WHERE original.est_number = backup.est_number;
