@@ -207,3 +207,74 @@ CHAPTER 7 - TABLE DESIGN
     # Add constraint examples
     ALTER TABLE not_null_example ADD CONSTRAINT student_id_key PRIMARY KEY (student_id);
     ALTER TABLE not_null_example ALTER COLUMN first_name SET NOT NULL;
+
+
+
+- B-Tree: Postgre's Default Index
+
+    - Each time a primary key or a UNIQUE constraint is added to a table, an index on that
+        column is automatically created.
+
+    - Indexes are stored separately from table data, but they're accessed automatically when
+        you run a query and updated every time a row is added or removed from the table.
+
+    - The B-Tree is the default index type in Postgres.  It's created automatically on the
+        columns designated for the primary key or a UNIQUE constraint, and it's also the
+        type created by default when a CREATE INDEX statement is executed.
+
+    - B-Trees (or Balanced Trees) organize the data in a way that when you search for a value,
+        it looks from the top of the tree down through branches until it locates the 
+        data you want.
+
+
+
+- Example - Benchmarking Speedup From Indexes
+
+    # Here, we import a file with 940K NYC street addresses
+    CREATE TABLE new_york_addresses (
+        longitude numeric(9, 6),
+        latitude numeric(9, 6),
+        street_number varchar(10),
+        street varchar(32),
+        unit varchar(7),
+        postcode varchar(5),
+        id integer CONSTRAINT new_york_key PRIMARY KEY
+    );
+
+
+    # Now, import the data
+    COPY new_york_addresses
+    FROM '~/Directory/city_of_new_york.csv'
+    WITH (FORMAT CSV, HEADER);
+
+
+    # Benchmark execution time with no index
+    EXPLAIN ANALYZE SELECT * FROM new_york_addresses
+    WHERE street = 'BROADWAY';
+
+
+    # Results
+    Planning time: 0.617 ms
+    Execution time: 289.838 ms
+
+
+    # Now add the B-Tree index
+    CREATE INDEX street_idx ON new_york_addresses (street);
+
+
+    # Results from re-running the queries
+    Planning time: 0.163 ms
+    Execution time: 5.887 ms
+
+
+
+- Index Considerations
+
+    - Most RDBMS's have several index types.  Consult the documentation if you need a special
+        purpose index.
+
+    - Consider adding indexes to any columns you'll use in table joins.
+
+    - Add indexes to columns that are frequenly used in a WHERE clause.
+
+    - Use EXPLAIN ANALYZE to test performance if you're unsure.  Optimization is a process!
