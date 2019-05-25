@@ -373,3 +373,67 @@ CHAPTER 9 - INSPECTING & MODIFYING DATA
                   FROM state_regions
                   WHERE inspect.st = state_regions.st
                   AND state_regions.region = 'New England');
+
+
+
+- Deleting Data
+
+    # Delete all rows in a table
+    DELETE FROM table_name;
+
+
+    # Delete filtered rows
+    DELETE FROM table_name WHERE expression;
+
+
+    # Remove a column from a table
+    ALTER TABLE table_name DROP COLUMN column_name;
+
+
+    # Remove a table from a database
+    DROP TABLE table_name;
+
+
+
+- Using Transaction Blocks
+
+    # Transaction Commands
+    START TRANSACTION  or  BEGIN     # Starts transaction block
+    COMMIT                           # Ends block and saves changes
+    ROLLBACK                         # Ends block and reverts all changes
+
+
+    # Rollback example
+    START TRANSACTION;
+
+    UPDATE mean_poultry_egg_inspect
+    SET company = 'AGRO Merchantss Oakland LLC'
+    WHERE company = 'AGRO Merchants Oakland LLC';
+
+    ROLLBACK;
+
+
+
+- Improving Performance When Updating Large Tables
+
+    Because of how Postgres works internally, adding a column to a table and filling it with
+      values can quickly inflate a table's size.  The reason is that the database creates a
+      new version of the existing row each time a value is updated, but it doesn't immediately
+      delete the old row version.
+
+    Instead of adding a column and filling it with values, we can save disk space by copying
+      the entire table and adding a populated column during the operation.  Then, we rename
+      the tables so the copy replaces the original, and the original becomes a backup.
+
+
+    # Create the backup table
+    CREATE TABLE meat_poultry_egg_inspect_backup AS
+    SELECT *,
+           '2018-02-07'::date AS reviewed_date
+    FROM meat_poultry_egg_inspect;
+
+
+    # Swap the table names
+    ALTER TABLE meat_poultry_egg_inspect RENAME TO meat_poultry_egg_inspect_temp;
+    ALTER TABLE meat_poultry_egg_inspect_backup RENAME TO meat_poultry_egg_inspect;
+    ALTER TABLE meat_poultry_egg_inspect_temp RENAME TO meat_poultry_egg_inspect_backup;
