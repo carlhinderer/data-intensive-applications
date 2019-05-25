@@ -94,3 +94,53 @@ CHAPTER 10 - STATISTICAL FUNCTIONS
     bachelors_income_r    income_travel_r    bachelors_travel_r
     ------------------    ---------------    ------------------
                   0.68               0.05                 -0.14
+
+
+
+- Predicting Values with Regression Analysis
+
+    We can also calculate the least-squares regression line using the 'regr_slope' and
+      'regr_intercept' functions.
+
+
+    # Calculate r
+    SELECT
+      round(
+          regr_slope(median_hh_income, pct_bachelors_higher)::numeric, 2
+          ) AS slope,
+      round(
+          regr_intercept(median_hh_income, pct_bachelors_higher)::numeric, 2
+          ) AS y_intercept
+    FROM acs_2011_2015_stats;
+
+    slope     y_intercept
+    ------    -----------
+    926.95       27901.15
+
+
+    This predicts that for each one-unit increase in bachelor's degress percentage, we can 
+      expect household income will increase by 926.65.  In a county in which the bachelor's
+      degree percentage is zero, the household income is 27901.15.
+
+
+
+- Finding the Effect of an Independent Variable with r-squared
+
+    Next, we calculate the 'coefficient of determination' (aka 'r-squared').  This tells us
+      the extent to which the variation in the independent variable explains the variation
+      in the dependent variable.  To find it, we use the 'regr_r2' function.
+
+
+    # Calculate r-squared
+    SELECT round(        
+               regr_r2(median_hh_income, pct_bachelors_higher)::numeric, 3
+                ) AS r_squared
+    FROM acs_2011_2015_stats;
+
+    r_squared
+    ---------
+        0.465
+
+
+    So, 46.5% of the variation in median household income in a county can be explained by the
+      percentage of people with a bachelor's degree or higher in that county.
