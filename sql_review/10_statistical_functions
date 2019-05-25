@@ -1,0 +1,96 @@
+---------------------------------------------------
+CHAPTER 10 - STATISTICAL FUNCTIONS
+---------------------------------------------------
+
+- Importing the Dataset
+
+    In this chapter, we are querying a dataset that tracks education and income by county
+      from 2011-2015.
+
+
+    # Create table for data set
+    CREATE TABLE acs_2011_2015_stats (
+        geoid varchar(14) CONSTRAINT geoid_key PRIMARY KEY,
+        county varchar(50) NOT NULL,
+        st varchar(20) NOT NULL,
+        pct_travel_60_min numeric(5, 3) NOT NULL,
+        pct_bachelors_higher numeric(5, 3) NOT NULL,
+        median_hh_income integer,
+        CHECK (pct_masters_higher <= pct_bachelors_higher)
+    );
+
+
+    # Import the data set
+    COPY acs_2011_2015_stats
+    FROM '~/Directory/acs_2011_2015_stats.csv'
+    WITH (FORMAT CSV, HEADER, DELIMITER ',');
+
+
+    # Description of Columns
+    pct_travel_60_min        # Percentage of workers age 16+ who communte 60+ mins to work
+    pct_bachelors_higher     # Percentage of people age 25+ who have a bachelors or higher
+    pct_masters_higher       # Percentage of people age 25+ who have a masters or higher
+    median_hh_income         # County's median household income in 2015-adjusted dollars
+
+
+
+- Pearson Correlation Coefficients (r)
+
+    The Pearson Correlation Coefficient (r) is a measure for quantifying the strength of a 
+      linear relationship between two variables.
+
+      - The r values fall between -1 and 1.  
+      - Either end of the range indicates a perfect correlation.
+      - Values near 0 indicate a random distribution with no correlation.
+      - A positive r value indicates a 'direct relationship'.
+      - A negative r value indicates an 'inverse relationship'.
+
+
+    Interpreting Correlation Coefficients
+            0        # No relationship
+      .01-.29        # Weak relationship
+      .30-.59        # Moderate relationship
+      .60-.99        # Strong relationship
+            1        # Perfect relationship
+
+
+
+- Measuring Correlation with corr(Y, X)
+
+    Here, we use the corr(Y, X) function to measure correlation and investigate what 
+      relationship exists, if any, between the percentage of people in a county who have 
+      attained a bachelor's degree and the median household income in that county.
+
+    The corr(Y, X) function is one of several 'binary aggregate functions' in SQL and is
+      so named because these functions accept 2 inputs.  Y is the dependent variable and
+      X is the independent variable.  
+
+
+    # Get the correlation between bachelor's degrees and income
+    SELECT corr(median_hh_income, pct_bachelors_higher) AS bachelors_income_r
+    FROM acs_2011_2015_stats;
+
+    bachelors_income_r
+    ------------------
+    0.682185675451399
+
+
+
+- Checking Additional Correlations
+
+    # Check for additional correlations with travel
+    SELECT
+      round(
+          corr(median_hh_income, pct_bachelors_higher)::numeric, 2
+          ) AS bachelors_income_r,
+      round(
+          corr(pct_travel_60_min, median_hh_income)::numeric, 2
+          ) AS income_travel_r,
+      round(
+          corr(pct_travel_60_min, pct_bachelors_higher)::numeric, 2
+          ) AS bachelors_travel_r
+    FROM acs_2011_2015_stats;
+
+    bachelors_income_r    income_travel_r    bachelors_travel_r
+    ------------------    ---------------    ------------------
+                  0.68               0.05                 -0.14
