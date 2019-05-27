@@ -1,0 +1,136 @@
+---------------------------------------------------
+CHAPTER 12 - ADVANCED QUERIES
+---------------------------------------------------
+
+- Using Subqueries
+
+    A subquery is nested inside another query.  Typically, it's used for a calculation or
+      logical test that provides a value or a set of data to be passed into the main portion
+      of the query.
+
+
+    # Update, with filtering of the rows we want to update
+    UPDATE table
+    SET column = (SELECT column
+                  FROM table_b
+                  WHERE table.column = table_b.column)
+    WHERE EXISTS (SELECT column
+                  FROM table_b
+                  WHERE table.column = table_b.column);
+
+
+
+- Filtering with Subqueries 
+
+    # Return the US counties that are at or above the 90th percentile for population
+    SELECT geo_name,
+           state_us_abbr,
+           population
+    FROM us_counties_2010
+    WHERE population >= (
+        SELECT percentile_cont(.9) WITHIN GROUP (ORDER BY population)
+        FROM us_counties_2010
+    )
+    ORDER BY population DESC;
+
+
+
+- Using a Subquery to Identify Which Rows to Delete
+
+    DELETE FROM us_counties_2010
+    WHERE population < (
+        SELECT percentile_cont(.9) WITHIN GROUP (ORDER BY population)
+        FROM us_counties_2010
+    );
+
+
+
+- Creating Dervied Queries with Subqueries
+
+    If your subquery returns rows and columns of data, you can convert that data to a table
+      by placing it in a FROM clause, the result of which is known as a 'derived table'.  A
+      derived table behaves just like any other table.
+
+
+    # Find the average and median of US counties, as well as the difference between them
+    SELECT round(calcs.average, 0) AS average,
+           calcs.median,
+           round(calcs.average - calcs.median, 0) AS median_average_diff
+    FROM (
+        SELECT avg(p0010001) AS average,
+               percentile_cont(.5) WITHIN GROUP (ORDER BY p0010001)::numeric(10,1) AS median
+        FROM us_counties_2010
+       )
+    AS calcs;
+
+    average    median     median_average_diff
+    -------    -------    -------------------
+      98233    25857.0                  72376
+
+
+
+- Joining Derived Tables
+
+      SELECT census.state_us_abbreviation AS st,
+             census.st_population,
+             plants.plant_count,
+             round((plants.plant_count/census.st_population::numeric(10,1))*1000000, 1) 
+               AS plants_per_million
+      FROM
+      (
+          SELECT st,
+                 count(*) AS plant_count
+          FROM meat_poultry_egg_inspect
+          GROUP BY st
+      )
+      AS plants
+      JOIN
+      (
+          SELECT state_us_abbreviation,
+                 sum(p0010001) AS st_population
+          FROM us_counties_2010
+          GROUP BY state_us_abbreviation
+      )
+      AS census
+      ON plants.st = census.state_us_abbreviation
+      ORDER BY plants_per_million DESC;
+
+
+
+- Generating Columns with Subqueries
+
+    We can also generate new columns of data with subqueries by placing a subquery in the
+      column list after SELECT.  
+
+
+    # Get the population of each state, along with the US median
+    SELECT geo_name,
+           state_us_abbreviation AS st,
+           population AS total_pop,
+           (SELECT percentile_cont(.5) WITHIN GROUP (ORDER BY population)
+            FROM us_counties_2010) AS us_median
+    FROM us_counties_2010;
+
+    geo_name          st    total_pop    us_median
+    --------------    --    ---------    ---------
+    Autauga County    AL        54571        25857
+    Baldwin County    AL       182265        25857
+    Barbour County    AL        27457        25857
+    Bibb County       AL        22915        25857
+    Blount County     AL        57322        25857
+    --snip--
+
+
+    # Calculate the difference between each county's population and the median
+    #   for all counties whose population is within 1000 of the median
+      SELECT geo_name,
+             state_us_abbreviation AS st,
+             population AS total_pop,
+             (SELECT percentile_cont(.5) WITHIN GROUP (ORDER BY population)
+              FROM us_counties_2010) AS us_median,
+             population - (SELECT percentile_cont(.5) WITHIN GROUP (ORDER BY population)
+                   FROM us_counties_2010) AS diff_from_median
+      FROM us_counties_2010
+      WHERE (population - (SELECT percentile_cont(.5) WITHIN GROUP (ORDER BY population)
+                           FROM us_counties_2010))
+      BETWEEN -1000 AND 1000;
