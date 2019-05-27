@@ -112,3 +112,76 @@ CHAPTER 11 - DATES AND TIMES
          FROM generate_series(1,1000));
     
     SELECT * FROM current_time_example;
+
+
+
+- Working with Time Zones
+
+    # Find the time zone setting of your db server
+    SHOW timezone;
+
+
+    # List all time zone names, abbreviations, and their UTC offsets
+    SELECT * FROM pg_timezone_abbrevs;
+    SELECT * FROM pg_timezone_names;
+
+
+    # Look up location names or time zones
+    SELECT *
+    FROM pg_timezone_names
+    WHERE name LIKE 'Europe%';
+
+    name                abbrev    utc_offset    is_dst
+    ----------------    ------    ----------    ------
+    Europe/Amsterdam    CEST      02:00:00      t
+    Europe/Andorra      CEST      02:00:00      t
+    Europe/Astrakhan    +04       04:00:00      f
+    Europe/Athens       EEST      03:00:00      t
+    Europe/Belfast      BST       01:00:00      t
+    --snip--    
+
+
+
+- Setting the Time Zone
+
+    When Postgres was installed, the default time zone was set in 'postgresql.conf'.  To 
+      change it, we must edit the file and restart the server.  However, we can more easily
+      change the pgAdmin client's time zone on a per-session basis, which will persist
+      as long as we're connected to the server.
+
+
+    # Change time zone in current session
+    SET timezone TO 'US/Pacific';
+
+    # Insert a datetime value
+    CREATE TABLE time_zone_test (
+        test_date timestamp with time zone
+    );
+    INSERT INTO time_zone_test VALUES ('2020-01-01 4:00');
+
+
+    # Get date time in 'US/Pacific'
+    SELECT test_date
+    FROM time_zone_test;
+
+    test_date
+    ----------------------
+    2020-01-01 04:00:00-08
+
+
+    # Change time zone
+    SET timezone TO 'US/Eastern';
+
+
+    # Get date time in 'US/Eastern'
+    SELECT test_date
+    FROM time_zone_test;
+
+
+    # Get date time in 'Asia/Seoul'
+    SELECT test_date AT TIME ZONE 'Asia/Seoul'
+    FROM time_zone_test;
+
+    timezone
+    -------------------
+    2020-01-01 21:00:00
