@@ -1,0 +1,114 @@
+---------------------------------------------------
+CHAPTER 11 - DATES AND TIMES
+---------------------------------------------------
+
+- Date and Time Data Types
+
+    - date = only the date
+           = using the ISO 8601 YYYY-MM-DD is recommended
+
+    - time = only the time
+           = adding 'with time zone' makes the column time zone aware
+           = using the ISO 8601 format HH:MM:SS is recommended
+           = can add an optional time zone designator
+
+    - timestamp = records the date and time
+                = can add 'with time zone' to make the column time zone aware
+                = the format 'timestamp' with time zone is part of the SQL standard
+                = PostgreSQL also has the shorthand timestamptz, which has the format YYYY-MM-DD HH:MM:SS TZ
+                = can specify time zones in 3 different formats: UTC offset, area/location designator, 
+                                                                 or standard abbreviation
+
+    - interval = holds a value that represents a unit of time expressed in the format 'quantity unit'
+               = doesn’t record the start or end of a period, only its duration
+               = examples include 12 days or 8 hours
+
+    All four data types can track the system clock and the nuances of the calendar. For example, date and 
+      timestamp recognize that June has 30 days. Therefore, June 31 is an invalid 'datetime' value that 
+      causes the database to throw an error. Likewise, the date February 29 is valid only in a leap year, 
+      such as 2020.
+
+
+
+- Extracting the Components of a Timestamp
+
+    # The 'date_part' function extracts a single value
+    SELECT
+        date_part('year', '2019-12-01 18:37:12 EST'::timestamptz) AS "year",
+        date_part('month', '2019-12-01 18:37:12 EST'::timestamptz) AS "month",
+        date_part('day', '2019-12-01 18:37:12 EST'::timestamptz) AS "day",
+        date_part('hour', '2019-12-01 18:37:12 EST'::timestamptz) AS "hour",
+        date_part('minute', '2019-12-01 18:37:12 EST'::timestamptz) AS "minute",
+        date_part('seconds', '2019-12-01 18:37:12 EST'::timestamptz) AS "seconds",
+        date_part('timezone_hour', '2019-12-01 18:37:12 EST'::timestamptz) AS "tz",
+        date_part('week', '2019-12-01 18:37:12 EST'::timestamptz) AS "week",
+        date_part('quarter', '2019-12-01 18:37:12 EST'::timestamptz) AS "quarter",
+        date_part('epoch', '2019-12-01 18:37:12 EST'::timestamptz) AS "epoch";
+
+    year    month    day    hour    minute    seconds    tz    week    quarter    epoch
+    ----    -----    ---    ----    ------    -------    --    ----    -------    ----------
+    2019       12      1      18        37         12    -5      48          4    1575243432
+
+
+    # The SQL-standard 'extract' function does the same thing
+    SELECT
+        extract('year' from '2019-12-01 18:37:12 EST'::timestamptz) AS "year";
+
+
+
+- Creating Datetime Values from Timestamp Components
+
+    It's not unusual to come across a data set in which the year, month, and day exist in 
+      separate columns.  Sometimes, it's helpful to combine them into a single datetime
+      value.
+
+
+    # Make datetime objects
+    make_date(year, month, day)
+    make_time(hour, minute, seconds)
+    make_timestamp(year, month, day, hour, minute, second, time zone)
+
+
+    # Examples
+    SELECT make_date(2018, 2, 22);
+    SELECT make_time(18, 4, 30.3);
+    SELECT make_timestamptz(2018, 2, 22, 18, 4, 30.3, 'Europe/Lisbon');
+
+    2018-02-22
+    18:04:30.3
+    2018-02-22 13:04:30.3-05
+
+
+
+- Retrieving the Current Date and Time
+
+    # Functions to get current date and time
+    current_date
+    current_time
+    current_timestamp   OR   now()
+    loacltime
+    localtimestamp
+
+
+    Note that these functions record the time at the start of the query, so they'll provide
+      the same time throughout the execution of the query regardless of how long the query
+      runs.  
+
+    If we want to instead reflect how the clock changes during the execution of the query,
+      we can use the Postgres-specific 'clock_timestamp()' function to record the current
+      time as it elapses.
+
+
+    # Use current_timestamp and clock_timestamp()
+    CREATE TABLE current_time_example (
+        time_id bigserial,
+        current_timestamp_col timestamp with time zone,
+        clock_timestamp_col timestamp with time zone
+    );
+    
+    INSERT INTO current_time_example (current_timestamp_col, clock_timestamp_col)
+        (SELECT current_timestamp,
+                clock_timestamp()
+         FROM generate_series(1,1000));
+    
+    SELECT * FROM current_time_example;
