@@ -134,3 +134,51 @@ CHAPTER 12 - ADVANCED QUERIES
       WHERE (population - (SELECT percentile_cont(.5) WITHIN GROUP (ORDER BY population)
                            FROM us_counties_2010))
       BETWEEN -1000 AND 1000;
+
+
+
+- Generating Values for the IN Operator
+
+    # Get employee records for all retirees
+    SELECT first_name, last_name
+    FROM employees
+    WHERE id IN (
+        SELECT id
+        FROM retirees
+    );
+
+
+
+- Checking Whether Values Exist
+
+    The EXISTS subquery is a true/false test.  It returns true if the subquery in parentheses
+      returns at least one row.
+
+
+    # Returns all employees if there is at least one retiree with an 'id'
+    SELECT first_name, last_name
+    FROM employees
+    WHERE EXISTS (
+        SELECT id
+        FROM retirees
+    );
+
+
+    # Mimics the behavior of IN
+    SELECT first_name, last_name
+    FROM employees
+    WHERE EXISTS (
+        SELECT id
+        FROM retirees
+        WHERE id = employees.id
+    );
+
+
+    # Find employees with no corresponding record in retirees with NOT EXISTS
+    SELECT fist_name, last_name
+    FROM employees
+    WHERE NOT EXISTS (
+        SELECT id
+        FROM retirees
+        WHERE id = employees.id
+    );
