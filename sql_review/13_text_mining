@@ -1,0 +1,57 @@
+---------------------------------------------------
+CHAPTER 13 - TEXT MINING
+---------------------------------------------------
+
+- String Formatting Functions
+
+    # Casing
+    upper('str')       # Uppercase
+    lower('str')       # Lowercase
+    initcap('str')     # Capitalize
+
+
+    # Length and Position
+    char_length('str')           # String length
+    position('substr' in 'str')  # Substring position, 1-indexed
+
+
+    # Removing characters
+    trim('substr' from 'string')          # Remove all substrs
+    trim(trailing 'substr' from 'str')    # Removes trailing substr
+    ltrim('str', 'substr')                # Removes substr from left
+    rtrim('str', 'substr')                # Removes substr from right
+
+
+    # Extracting and replacing characters
+    left('str', n)                        # Remove and return n characters from beginning
+    right('str', n)                       # Remove and return n characters from end
+
+
+
+- Regular Expression Matchers
+
+    Expression       Description
+    ---------------------------------------------------------------------------------------
+    .                A dot is a wildcard that finds any character except a newline.
+    [FGz]            Any character in the square brackets. Here, F, G, or z.
+    [a-z]            A range of characters. Here, lowercase a to z.
+    [^a-z]           The caret negates the match. Here, not lowercase a to z.
+
+    \w               Any word character or underscore. Same as [A-Za-z0-9_].
+    \d               Any digit.
+    \s               A space.
+    \t               Tab character.
+    \n               Newline character.
+    \r               Carriage return character.
+
+    ^                Match at the start of a string.
+    $                Match at the end of a string.
+    ?                Get the preceding match zero or one time.
+    *                Get the preceding match zero or more times.
+    +                Get the preceding match one or more times.
+
+    {m}              Get the preceding match exactly m times.
+    {m,n}            Get the preceding match between m and n times.
+    a|b              The pipe denotes alternation. Find either a or b.
+    ( )              Create and report a capture group or set precedence.
+    (?: )            Negate the reporting of a capture group.
