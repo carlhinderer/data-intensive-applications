@@ -15,7 +15,7 @@ CHAPTER 6 - JOINS
 
     JOIN (aka INNER JOIN)
       Returns rows from both tables where matching values are found
-      in the joined columns of both tables
+      in the joined columns of both tables.
 
     LEFT JOIN
       Returns every row from the left table, plus rows that match

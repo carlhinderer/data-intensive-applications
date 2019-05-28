@@ -65,7 +65,7 @@ CHAPTER 7 - TABLE DESIGN
 
 
 
-- Creating a Composity Natural Primary Key
+- Creating a Composite Natural Primary Key
 
     CREATE TABLE natural_key_composite_example (
         student_id varchar(10),
@@ -106,7 +106,7 @@ CHAPTER 7 - TABLE DESIGN
         CONSTRAINT licenses_key PRIMARY KEY (license_id)
     );
 
-    # Contains a reference to licenses (M:N relationship)
+    # Contains a reference to licenses (1:N relationship)
     CREATE TABLE registrations (
         registration_id varchar(10),
         registration_date date,

@@ -27,7 +27,7 @@ CHAPTER 10 - STATISTICAL FUNCTIONS
 
 
     # Description of Columns
-    pct_travel_60_min        # Percentage of workers age 16+ who communte 60+ mins to work
+    pct_travel_60_min        # Percentage of workers age 16+ who commute 60+ mins to work
     pct_bachelors_higher     # Percentage of people age 25+ who have a bachelors or higher
     pct_masters_higher       # Percentage of people age 25+ who have a masters or higher
     median_hh_income         # County's median household income in 2015-adjusted dollars

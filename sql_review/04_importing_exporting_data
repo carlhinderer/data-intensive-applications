@@ -70,7 +70,7 @@ CHAPTER 4 - IMPORTING AND EXPORTING DATA
 
 
 
--  Adding a Default Values
+-  Adding Default Values
 
     # Delete the data we imported previously
     DELETE FROM supervisor_salaries;
