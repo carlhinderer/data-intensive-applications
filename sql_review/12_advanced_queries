@@ -332,13 +332,11 @@ CHAPTER 12 - ADVANCED QUERIES
 
     SELECT *
     FROM crosstab('SELECT
-                     station_name,
-                     date_part(''month'', observation_date),
-                     percentile_cont(.5)
-                          WITHIN GROUP (ORDER BY max_temp)
+                       station_name,
+                       date_part(''month'', observation_date),
+                       percentile_cont(.5) WITHIN GROUP (ORDER BY max_temp)
                    FROM temperature_readings
-                   GROUP BY station_name,
-                            date_part(''month'', observation_date)
+                   GROUP BY station_name, date_part(''month'', observation_date)
                    ORDER BY station_name',
     
                   'SELECT month
@@ -358,3 +356,49 @@ CHAPTER 12 - ADVANCED QUERIES
         nov numeric(3,0),
         dec numeric(3,0)
     );
+
+
+
+- Reclassifying Values with CASE
+
+    The CASE statement is a conditional expression.  For data analysis, it's handy for 
+      reclassifying values into categories.
+
+
+    # CASE Syntax
+    CASE WHEN condition THEN result
+         WHEN other_condition THEN result
+         ELSE result
+    END
+
+
+    # Example
+    SELECT max_temp,
+           CASE WHEN max_temp >= 90 THEN 'Hot'
+                WHEN max_temp BETWEEN 70 AND 89 THEN 'Warm'
+                WHEN max_temp BETWEEN 50 AND 69 THEN 'Pleasant'
+                WHEN max_temp BETWEEN 33 AND 49 THEN 'Cold'
+                WHEN max_temp BETWEEN 20 AND 32 THEN 'Freezing'
+                ELSE 'Inhumane'
+           END AS temperature_group
+    FROM temperature_readings;
+
+
+
+- Example - Using CASE in a CTE
+
+    WITH temps_collapsed (station_name, max_temperature_group) AS
+        (SELECT station_name,
+               CASE WHEN max_temp >= 90 THEN 'Hot'
+                    WHEN max_temp BETWEEN 70 AND 89 THEN 'Warm'
+                    WHEN max_temp BETWEEN 50 AND 69 THEN 'Pleasant'
+                    WHEN max_temp BETWEEN 33 AND 49 THEN 'Cold'
+                    WHEN max_temp BETWEEN 20 AND 32 THEN 'Freezing'
+                    ELSE 'Inhumane'
+                END
+         FROM temperature_readings)
+  
+    SELECT station_name, max_temperature_group, count(*)
+    FROM temps_collapsed
+    GROUP BY station_name, max_temperature_group
+    ORDER BY station_name, count(*) DESC;
