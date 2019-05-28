@@ -55,3 +55,119 @@ CHAPTER 13 - TEXT MINING
     a|b              The pipe denotes alternation. Find either a or b.
     ( )              Create and report a capture group or set precedence.
     (?: )            Negate the reporting of a capture group.
+
+
+
+- Regex Extraction Examples
+
+    # Extract year from string
+    SELECT substring('The game starts at 7 p.m. on May 2, 2019.' from '\d{4}');
+
+
+    # Extract date in MM/DD/YY format
+    SELECT crime_id,
+        regexp_match(original_text, '\d{1,2}\/\d{1,2}\/\d{2}')
+    FROM crime_reports;
+
+    crime_id    regexp_match
+    --------    ------------
+           1    {4/16/17}
+           2    {4/8/17}
+           3    {4/4/17}
+           4    {04/10/17}
+           5    {04/09/17}
+
+
+    # Extract all dates if more than one is present
+    SELECT crime_id,
+        regexp_matches(original_text, '\d{1,2}\/\d{1,2}\/\d{2}', 'g')
+    FROM crime_reports;
+
+    crime_id    regexp_matches
+    --------    --------------
+           1    {4/16/17}
+           1    {4/17/17}
+           2    {4/8/17}
+           3    {4/4/17}
+           4    {04/10/17}
+           5    {04/09/17}
+
+
+    # Extract all relevant info
+    SELECT
+        regexp_match(original_text, '(?:C0|SO)[0-9]+') AS case_number,
+        regexp_match(original_text, '\d{1,2}\/\d{1,2}\/\d{2}') AS date_1,
+        regexp_match(original_text, '\n(?:\w+ \w+|\w+)\n(.*):') AS crime_type,
+        regexp_match(original_text, '(?:Sq.|Plz.|Dr.|Ter.|Rd.)\n(\w+ \w+|\w+)\n')
+            AS city
+    FROM crime_reports;
+
+
+
+- Extracting Text From regexp_match() Results
+
+    # Extract case numbers
+    SELECT
+        crime_id,
+        (regexp_match(original_text, '(?:C0|SO)[0-9]+'))[1]
+            AS case_number
+    FROM crime_reports;
+
+    crime_id    case_number
+    --------    -----------
+           1    C0170006614
+           2    C0170006162
+           3    C0170006079
+           4    SO170006250
+           5    SO170006211
+
+
+
+- Using Regex's in WHERE Clauses
+
+    Besides filtering queries with LIKE and ILIKE in WHERE clauses, we can also use regular
+      expressions to perform more complex matches.
+
+    We use ~ to make case-sensitive matches and ~* to make case-insensitive matches.
+
+
+    SELECT geo_name
+    FROM us_counties_2010
+    WHERE geo_name ~* '(.+lade.+|.+lare.+)'
+    ORDER BY geo_name;
+
+    SELECT geo_name
+    FROM us_counties_2010
+    WHERE geo_name ~* '.+ash.+' AND geo_name !~ 'Wash.+'
+    ORDER BY geo_name;
+
+
+
+- Additional Regex Functions
+
+    # Replace a matched pattern with substitute text
+    regexp_replace(string, pattern, replacement text)
+    SELECT regexp_replace('05/12/2018', '\d{4}', '2017');
+
+
+    # Split on a delimiter into rows
+    regexp_split_to_table(string, pattern)
+    SELECT regexp_split_to_table('Four,score,and,seven,years,ago', ',');
+
+    regexp_split_to_table
+    ---------------------
+    Four
+    score
+    and
+    seven
+    years
+    ago
+
+
+    # Split on a delimiter into array
+    regexp_split_to_array(string, pattern)
+    SELECT regexp_split_to_array('Phil Mike Tony Steve', ' ');
+
+    regexp_split_to_array
+    ----------------------
+    {Phil,Mike,Tony,Steve}
