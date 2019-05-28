@@ -171,3 +171,93 @@ CHAPTER 13 - TEXT MINING
     regexp_split_to_array
     ----------------------
     {Phil,Mike,Tony,Steve}
+
+
+
+- Full Text Search in Postgres
+
+    Postgres's implementation of text search includes 2 data types.  
+
+    The 'tsvector' data type represents the text to be searched and to be stored in an 
+      optimized form.
+
+    The 'tsquery' data type represents the search query terms and operators.
+
+
+
+- Storing Text as Lexemes with 'tsvector'
+
+    The 'tsvector' data type reduces text to a sorted list of 'lexemes', which are units of
+      meaning in languagte.  
+
+    Lexemes are words without the variations created by suffixes.  For example, the 'tsvector' 
+      format would store the words 'washes', 'washed', and 'washing' as the lexeme 'wash', 
+      while remembering the word's position in the original text.  Converting text to 'tsvector' 
+      also removes small 'stop words' that don't play a role in search.
+
+
+    # Normalize a string to a tsvector
+    SELECT to_tsvector('I am walking across the sitting room to sit with you.');
+
+    'across':4 'room':7 'sit':6,9 'walk':3
+
+
+
+- Creating Search Terms with 'tsquery'
+
+    The 'tsquery' data type represents the full text query, again optimized as lexemes.  
+      It also provides operators for controlling the search (&, |, !, and <->).
+
+
+    # Convert search terms to 'tsquery' data
+    SELECT to_tsquery('walking & sitting');
+
+    'walk' & 'sit'
+
+
+
+- Using the @@ Match Operator for Searching
+
+    With the text and search terms converted to the full text search data types, we can use
+      the @@ match operator to check whether a query matches text.
+
+
+    # Returns true, since 'walk' and 'sit' lexemes are both present
+    SELECT to_tsvector('I am walking across the sitting room') @@ to_tsquery('walking & sitting');
+
+    # Returns false, since 'run' lexeme is not present
+    SELECT to_tsvector('I am walking across the sitting room') @@ to_tsquery('walking & running');
+
+
+
+- Creating a Table for Full Text Search
+
+    Now, we'll analyze a set of presidential speaches since WW2.  We want to convert the original
+      speech text into a 'tsvector' to optimize it for searching.  But first, we'll convert the
+      original file into a table.
+
+
+    # Create table to hold presidential speeches
+    CREATE TABLE president_speeches (
+        sotu_id serial PRIMARY KEY,
+        president varchar(100) NOT NULL,
+        title varchar(250) NOT NULL,
+        speech_date date NOT NULL,
+        speech_text text NOT NULL,
+        search_speech_text tsvector
+    );
+    
+
+    # Copy the csv into the table
+    COPY president_speeches (president, title, speech_date, speech_text)
+    FROM '~/YourDirectory/sotu-1946-1977.csv'
+    WITH (FORMAT CSV, DELIMITER '|', HEADER OFF, QUOTE '@');
+
+
+    # Convert the contents of the 'speech_text' column to a tsvector
+    UPDATE president_speeches
+    SET search_speech_text = to_tsvector('english', speech_text);
+
+
+    # Create a GIN index on column to speed up searches
+    CREATE INDEX search_idx ON president_speeches USING gin(search_speech_text);
