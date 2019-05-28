@@ -182,3 +182,69 @@ CHAPTER 12 - ADVANCED QUERIES
         FROM retirees
         WHERE id = employees.id
     );
+    
+
+
+- Common Table Expressions
+
+    As an alternative to placing subqueries in a FROM clause, we can also create temporary
+      tables for querying using 'CTE (Common Table Expressions'.  CTE is a recent addition to
+      standard SQL, and is informally called a 'WITH clause'.
+
+    Using a CTE, you can define one or more tables up front with subqueries.  Then, you can 
+      query the table results as often as needed in the main query that follows.
+
+
+    # Determines how many counties in each state have 100K+ people
+    WITH
+        large_counties (geo_name, st, population)
+    AS
+        (
+            SELECT geo_name, state_us_abbreviation, population
+            FROM us_counties_2010
+            WHERE population > 100000
+        )
+    SELECT st, count(*)
+    FROM large_counties
+    GROUP BY st
+    ORDER BY count(*) DESC;
+
+    st    count
+    --    -----
+    TX       39
+    CA       35
+    FL       33
+    PA       31
+    OH       28
+    --snip--
+
+
+    # Same query without a CTE
+    SELECT state_us_abbreviation, count(*)
+    FROM us_counties_2010
+    WHERE population >= 100000
+    GROUP BY state_us_abbreviation
+    ORDER BY count(*) DESC;
+
+
+
+- Example - Derived Tables with CTE
+
+      WITH
+          counties (st, population) AS
+          (SELECT state_us_abbreviation, sum(population_count_100_percent)
+           FROM us_counties_2010
+           GROUP BY state_us_abbreviation),
+    
+          plants (st, plants) AS
+          (SELECT st, count(*) AS plants
+           FROM meat_poultry_egg_inspect
+           GROUP BY st)
+    
+      SELECT counties.st,
+             population,
+             plants,
+             round((plants/population::numeric(10,1)) * 1000000, 1) AS per_million
+      FROM counties JOIN plants
+      ON counties.st = plants.st
+      ORDER BY per_million DESC;
