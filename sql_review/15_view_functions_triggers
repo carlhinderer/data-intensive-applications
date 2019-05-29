@@ -169,3 +169,80 @@ CHAPTER 15 - VIEWS, FUNCTIONS, and TRIGGERS
     Barbour County    Barbour
     Bibb County       Bibb
     Blount County     Blount
+
+
+
+- Triggers
+
+    A database 'trigger' executes a function whenver a specified event, such as an INSERT,
+      UPDATE, or DELETE occurs on a table or view.  
+
+    In this example, we'll log whenever student grades are changed in our database.
+
+
+    # Create the grades table
+    CREATE TABLE grades (
+        student_id bigint,
+        course_id bigint,
+        course varchar(30) NOT NULL,
+        grade varchar(5) NOT NULL,
+        PRIMARY KEY (student_id, course_id)
+    );
+
+
+    # Insert data into grades table
+    INSERT INTO grades
+    VALUES
+        (1, 1, 'Biology 2', 'F'),
+        (1, 2, 'English 11B', 'D'),
+        (1, 3, 'World History 11B', 'C'),
+        (1, 4, 'Trig 2', 'B');
+
+
+    # Create table for logging changes to grades
+    CREATE TABLE grades_history (
+        student_id bigint NOT NULL,
+        course_id bigint NOT NULL,
+        change_time timestamp with time zone NOT NULL,
+        course varchar(30) NOT NULL,
+        old_grade varchar(5) NOT NULL,
+        new_grade varchar(5) NOT NULL,
+        PRIMARY KEY (student_id, course_id, change_time)
+    );
+
+
+
+- Creating the Function and Trigger
+
+    # Create the function to log grade changes
+    CREATE OR REPLACE FUNCTION record_if_grade_changed()
+    RETURNS trigger AS
+    $$
+    BEGIN
+        IF NEW.grade <> OLD.grade THEN
+        INSERT INTO grades_history (
+            student_id,
+            course_id,
+            change_time,
+            course,
+            old_grade,
+            new_grade)
+        VALUES
+            (OLD.student_id,
+             OLD.course_id,
+             now(),
+             OLD.course,
+             OLD.grade,
+             NEW.grade);
+        END IF;
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+
+    # Create the trigger
+    CREATE TRIGGER grades_update
+    AFTER UPDATE
+    ON grades
+    FOR EACH ROW
+    EXECUTE PROCEDURE record_if_grade_changed();
