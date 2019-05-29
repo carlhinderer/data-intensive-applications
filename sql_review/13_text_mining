@@ -261,3 +261,112 @@ CHAPTER 13 - TEXT MINING
 
     # Create a GIN index on column to speed up searches
     CREATE INDEX search_idx ON president_speeches USING gin(search_speech_text);
+
+
+
+- Searching Speech Text
+
+    Now, we'll search the 'speech_text' column.  
+
+
+    # List the speeches in which the president mentioned Vietnam
+    SELECT president, speech_date
+    FROM president_speeches
+    WHERE search_speech_text @@ to_tsquery('Vietnam')
+    ORDER BY speech_date;
+
+    president            speech_date
+    -----------------    -----------
+    John F. Kennedy      1961-05-25
+    Lyndon B. Johnson    1966-01-12
+    Lyndon B. Johnson    1967-01-10
+    Lyndon B. Johnson    1968-01-17
+    Lyndon B. Johnson    1969-01-14
+    Richard M. Nixon     1970-01-22
+    Richard M. Nixon     1972-01-20
+    Richard M. Nixon     1973-02-02
+    Gerald R. Ford       1975-01-15
+    Gerald R. Ford       1977-01-12
+
+
+
+- Showing Search Result Location
+
+    We can use the 'ts_headline()' function to see where our search terms appeared in the
+      text.  It displays one or more highlighted search terms surrounded by adjacent
+      words.
+
+
+    SELECT president,
+           speech_date,
+           ts_headline(speech_text, to_tsquery('Vietnam'),
+                       'StartSel = <,
+                        StopSel = >,
+                        MinWords=5,
+                        MaxWords=7,
+                        MaxFragments=1')
+    FROM president_speeches
+    WHERE search_speech_text @@ to_tsquery('Vietnam');
+
+
+    president            speech_date    ts_headline
+    -----------------    -----------    -------------------------------------------------
+    John F. Kennedy      1961-05-25     twelve months in <Vietnam> alone--by subversives
+    Lyndon B. Johnson    1966-01-12     bitter conflict in <Vietnam>. Later
+    Lyndon B. Johnson    1967-01-10     <Vietnam>--is not a simple one. There
+    Lyndon B. Johnson    1968-01-17     been held in <Vietnam>--in the midst
+    Lyndon B. Johnson    1969-01-14     conflict in <Vietnam>, the dangers of nuclear
+    Richard M. Nixon     1970-01-22     <Vietnam> in a way that our generation
+    --snip--
+
+
+
+- Using Multiple Search Terms
+
+    As another example, we could look for speeches where the president mentioned the word
+      'transportation' but didn't discuss 'roads'.  
+
+    SELECT president,
+           speech_date
+           ts_headline(speech_text, to_tsquery('transportation & !roads'),
+                       'StartSel = <,
+                        StopSel = >,
+                        MinWords=5,
+                        MaxWords=7,
+                        MaxFragments=1')
+    FROM president_speeches
+    WHERE search_speech_text @@ to_tsquery('transportation & !roads');
+
+    president            speech_date    ts_headline
+    -----------------    -----------    -------------------------------------------------
+    Harry S. Truman      1947-01-06     such industries as <transportation>, coal, oil, steel
+    Harry S. Truman      1949-01-05     field of <transportation>
+    John F. Kennedy      1961-01-30     Obtaining additional air <transport> mobility--and obtaining
+    Lyndon B. Johnson    1964-01-08     reformed our tangled <transportation> and transit policies
+    --snip--
+
+
+
+- Searching for Adjacent Words
+
+    Finally, we'll use the distance (<->) operator to find adjacent words.  Alternatively, we can
+      place a number between the < and > signs to find terms that many words apart.
+
+
+    # Find the word 'military' followed by the word 'defense'
+    SELECT president,
+           speech_date,
+           ts_headline(speech_text, to_tsquery('military <-> defense'),
+                       'StartSel = <,
+                        StopSel = >,
+                        MinWords=5,
+                        MaxWords=7,
+                        MaxFragments=1')
+    FROM president_speeches
+    WHERE search_speech_text @@ to_tsquery('military <-> defense');
+
+
+
+- Ranking Query Matches By Relevance
+
+    
