@@ -14,7 +14,6 @@ CHAPTER 2 - DATA MODELS & QUERY LANGUAGES
 
     - Network model and hierarchical model become main alternatives to relational (late 70s)
         - IBM's 'Information Management System' (1968) used hierarchical model similar to document
-        - 
 
     - NoSQL (mostly a combination of document and graph DBs) emerges as alternative (early 2010s)
         - Need for greater scalability to handle large datasets or high write throughput

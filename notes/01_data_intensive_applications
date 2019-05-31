@@ -278,9 +278,9 @@ CHAPTER 1 - RELIABLE, SCALABLE, MAINTAINABLE APPLICATIONS
       - Provide good support for automation and integration with standard tools
       - Avoid dependency on individual machines
       - Provide good documentation
-      - Provide good default behavoir but provide freedom for overriding defaults
+      - Provide good default behavior but provide freedom for overriding defaults
       - Self-healing where appropriate
-      - Exhibit predictable behavoir and avoid surprises
+      - Exhibit predictable behavior and avoid surprises
 
 
 
