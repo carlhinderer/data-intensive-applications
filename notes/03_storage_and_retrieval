@@ -238,6 +238,7 @@ CHAPTER 3 - STORAGE AND RETRIEVAL
       we cannot append new key-value pairs to the segment immediately, since writes can occur
       in any order.
 
+
     SSTables have several big advantages over log segments with hash indexes:
 
       1. Merging segments is simple and efficient, even if the files are bigger than the 
@@ -331,3 +332,58 @@ CHAPTER 3 - STORAGE AND RETRIEVAL
       immediately appended.  That log is not in sorted order, because its only purpose is to
       restore the memtable after a crash.  Every time the memtable is written out to an SSTable,
       the corresponding log can be discarded.
+
+
+
+- Making an LSM-Tree Out of SSTables
+
+    The algorithm described here is essentially what is used in 'LevelDB' and 'RocksDB',
+      key-value storage engine libraries that are designed to be embedded into other
+      applications.  Among other things, LevelDB can be used in Riak as an alternative to
+      Bitcask.  Similar storage engines are used in Cassandra and HBase, both of which were
+      inspired by Google's 'BigTable' paper (which introduced the terms 'SSTable' and 'memtable').
+      
+    Originally this indexing structure was described by Patrick O'Neil under the name
+      'Log-Structured Merge-Tree' ('LSM-Tree').  This built on earlier work on log-structured
+      filesystems.  Storage engines based on this principle of merging and compacting sorted files
+      are often called 'LSM Storage Engines'.
+
+    Lucene, an indexing engine for full-text search used by Elasticsearch and Solr, uses a similar
+      method for storing its 'term dictionary'.  A full-text index is much more complex than a
+      key-value index, but is based on a similar idea: given a word in a search query, find all
+      the documents (web pages, product descriptions, etc.) that mention the word.  This is 
+      implemented with a key-value structure where the key is a word (a 'term') and the value
+      is the list of IDs of all the documents that contain the word (the 'postings list').  In
+      Lucene, this mapping from term to postings list is kept in SSTable-like sorted files, 
+      which are merged in the background as needed.
+
+
+
+- Performance Optimizations
+
+    The LSM-Tree algorithm can be slow when looking up keys that do not exist in the database.
+      You have to check the memtable, then the segments all the way back to the oldest, possibly
+      having to read from disk in each one, before you can be sure the key does not exist.  In order
+      to optimize this kind of access, storage engines often use additional 'Bloom filters'.  A
+      Bloom filter is a memory-efficient data structure for approximating the contents of a set.
+      It can tell you if a key does not appear in the database, and thus saves many
+      unnecessary disk reads for nonexistent keys.
+
+    There are also different strategies to determine the order and timing of how SSTables are
+      compacted and merged.  The most common options are 'size-tiered' and 'leveled' compaction.
+      LevelDB and RocksDB use leveled compaction, HBase uses size-tiered compaction, and
+      Cassandra supports both.
+
+      - In size-tiered compaction, newer and smaller SSTables are successively merged into 
+          older and larger SSTables.
+
+      - In leveled compaction, the key range is split up into smaller SSTables and older data is
+          moved into separate levels, with allows the compaction to proceed more incrementally and
+          use less disk space.
+
+
+    Even though there are many subtleties, the basic idea of LSM-Trees - keeping a cascade of 
+      SSTables that are merged in the background - is simple and effective.  Even when the 
+      dataset is much bigger than the available memory, it continues to work well.  Since data is
+      stored in sorted order, you can efficiently perform range queries.  Since writes are
+      sequential, write throughput is remarkably high.
