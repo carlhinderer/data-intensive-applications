@@ -1,0 +1,52 @@
+---------------------------------------------------------------------------
+CHAPTER 3 - STORAGE AND RETRIEVAL
+---------------------------------------------------------------------------
+
+- The World's Simplest Database
+
+    #!/bin/bash
+
+    db_set () {
+        echo "$1,$2" >> database
+    }
+
+    db_get () {
+        grep "^$1," database | sed -e "s/^$1,//" | tail -n 1
+    }
+
+
+    These two functions implement a key-value store. You can call 'db_set key value', which will 
+      store key and value in the database. The key and value can be (almost) anything you like—
+      for example, the value could be a JSON document. You can then call 'db_get key', which looks 
+      up the most recent value associated with that particular key and returns it.
+
+    $ db_set 123456 '{"name":"London","attractions":["Big Ben","London Eye"]}'
+
+    $ db_set 42 '{"name":"San Francisco","attractions":["Golden Gate Bridge"]}'
+
+    $ db_get 42
+    {"name":"San Francisco","attractions":["Golden Gate Bridge"]}
+
+
+
+- The Simplest Database is a Log
+
+    Our 'db_set' function actually has pretty good performance for something that is so simple, 
+      because appending to a file is generally very efficient. Similarly to what 'db_set' does, 
+      many databases internally use a log, which is an append-only data file. 
+
+    Real databases have more issues to deal with (such as concurrency control, reclaiming disk 
+      space so that the log doesn’t grow forever, and handling errors and partially written 
+      records), but the basic principle is the same. Logs are incredibly useful, and we will 
+      encounter them several times in the rest of this book.
+
+    Note that the word log is often used to refer to application logs, where an application outputs 
+      text that describes what’s happening. In this book, log is used in the more general sense: 
+      an append-only sequence of records. It doesn’t have to be human-readable; it might be binary and 
+      intended only for other programs to read.
+
+
+
+
+
+- SSTables
