@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------
-CHAPTER 3 - STORAGE AND RETRIEVAL
+CHAPTER 3A - STORAGE AND RETRIEVAL - INDEXING
 ---------------------------------------------------------------------------
 
 - The World's Simplest Database
@@ -458,6 +458,12 @@ CHAPTER 3 - STORAGE AND RETRIEVAL
       don't need to follow many page references to find the page you are looking for.  (A 4-level
       tree of 4-KB pages with a branching factor of 500 can store up to 256 TB).
 
+
+
+- Making B-Trees Reliable
+
+
+- B-Tree Optimizations
 
 
 - 
