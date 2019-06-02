@@ -86,3 +86,68 @@ CHAPTER 3C - STORAGE AND RETRIEVAL - COLUMN-ORIENTED STORAGE
     The column-oriented storage layout relies on each column file containing the rows in the same order.
       Thus, if you need to reassemble an entire row, you can take the 23rd entry from each of the
       individual column files and put them together to form the 23rd row of the table.
+
+
+
+- Column Compression
+
+    Besides only loading those columns from disk that are required for a query, we can further reduce 
+      the demands on disk throughput by compressing data. Fortunately, column-oriented storage often 
+      lends itself very well to compression.
+
+    Take a look at the sequences of values for each column in Figure 3-10: they often look quite 
+      repetitive, which is a good sign for compression. Depending on the data in the column, different
+      compression techniques can be used. One technique that is particularly effective in data 
+      warehouses is bitmap encoding.
+
+    
+    Column values:
+    ---------------------------------
+    product_sk:        69 69 69 69 74 31 31 31 31 29 30 30 31 31 31 68 69 69
+
+
+    Bitmap for each possible value:
+    ---------------------------------
+    product_sk = 29:   0  0  0  0  0  0  0  0  0  1  0  0  0  0  0  0  0  0
+    product_sk = 30:   0  0  0  0  0  0  0  0  0  0  1  1  0  0  0  0  0  0
+    product_sk = 31:   0  0  0  0  0  1  1  1  1  0  0  0  1  1  1  0  0  0
+    product_sk = 68:   0  0  0  0  0  0  0  0  0  0  0  0  0  0  0  1  0  0
+    product_sk = 69:   1  1  1  1  0  0  0  0  0  0  0  0  0  0  0  0  1  1
+    product_sk = 74:   0  0  0  0  1  0  0  0  0  0  0  0  0  0  0  0  0  0
+
+
+    Often, the number of distinct values in a column is small compared to the number of rows (for 
+      example, a retailer may have billions of sales transactions, but only 100,000 distinct products). 
+      We can now take a column with n distinct values and turn it into n separate bitmaps: one bitmap 
+      for each distinct value, with one bit for each row. The bit is 1 if the row has that value, and 
+      0 if not.
+
+    If n is very small (for example, a country column may have approximately 200 distinct values), 
+      those bitmaps can be stored with one bit per row. But if n is bigger, there will be a lot of 
+      zeros in most of the bitmaps (we say that they are sparse). In that case, the bitmaps can 
+      additionally be run-length encoded, as shown at the bottom of Figure 3-11. This can make the 
+      encoding of a column remarkably compact.
+
+
+    Bitmap indexes such as these are very well suited for the kinds of queries that are common in 
+      a data warehouse. For example:
+
+      WHERE product_sk IN (30, 68, 69):
+
+      Load the three bitmaps for product_sk = 30, product_sk = 68, and product_sk = 69, and 
+        calculate the bitwise OR of the three bitmaps, which can be done very efficiently.
+
+      WHERE product_sk = 31 AND store_sk = 3:
+
+      Load the bitmaps for product_sk = 31 and store_sk = 3, and calculate the bitwise AND. This 
+        works because the columns contain the rows in the same order, so the kth bit in one column’s 
+        bitmap corresponds to the same row as the kth bit in another column’s bitmap.
+
+
+    There are also various other compression schemes for different kinds of data, but we won’t go 
+      into them in detail.
+
+    Cassandra and HBase have a concept of column families, which they inherited from Bigtable. 
+      However, it is very misleading to call them column-oriented: within each column family, they 
+      store all columns from a row together, along with a row key, and they do not use column 
+      compression. Thus, the Bigtable model is still mostly row-oriented.
