@@ -1,0 +1,88 @@
+---------------------------------------------------------------------------
+CHAPTER 3C - STORAGE AND RETRIEVAL - COLUMN-ORIENTED STORAGE
+---------------------------------------------------------------------------
+
+- Limitations of Row-Oriented Storage
+
+    If you have trillions of rows and petabytes of data in your fact tables, storing and querying 
+      them efficiently becomes a challenging problem. Dimension tables are usually much smaller 
+      (millions of rows), so in this section we will concentrate primarily on storage of facts.
+
+    Although fact tables are often over 100 columns wide, a typical data warehouse query only 
+      accesses 4 or 5 of them at one time ("SELECT *" queries are rarely needed for analytics). Take 
+      the query in this example: it accesses a large number of rows (every occurrence of someone 
+      buying fruit or candy during the 2013 calendar year), but it only needs to access three columns 
+      of the fact_sales table: date_key, product_sk, and quantity. The query ignores all other columns.
+
+
+    # Analyzing whether people are more inclined to buy fresh fruit or candy, 
+    #   depending on the day of the week
+
+    SELECT
+      dim_date.weekday, dim_product.category,
+      SUM(fact_sales.quantity) AS quantity_sold
+    FROM fact_sales
+      JOIN dim_date    ON fact_sales.date_key   = dim_date.date_key
+      JOIN dim_product ON fact_sales.product_sk = dim_product.product_sk
+    WHERE
+      dim_date.year = 2013 AND
+      dim_product.category IN ('Fresh fruit', 'Candy')
+    GROUP BY
+      dim_date.weekday, dim_product.category;
+
+
+    How can we execute this query efficiently?
+
+
+
+- Column-Oriented Storage
+
+    In most OLTP databases, storage is laid out in a row-oriented fashion: all the values from one 
+      row of a table are stored next to each other. Document databases are similar: an entire document
+      is typically stored as one contiguous sequence of bytes. You can see this in the CSV examples.
+
+    In order to process a query like this one, you may have indexes on fact_sales.date_key and/or
+      fact_sales.product_sk that tell the storage engine where to find all the sales for a particular 
+      date or for a particular product. But then, a row-oriented storage engine still needs to load all 
+      of those rows (each consisting of over 100 attributes) from disk into memory, parse them, and 
+      filter out those that don’t meet the required conditions. That can take a long time.
+
+    The idea behind column-oriented storage is simple: don’t store all the values from one row 
+      together, but store all the values from each column together instead. If each column is stored 
+      in a separate file, a query only needs to read and parse those columns that are used in that 
+      query, which can save a lot of work. This principle is illustrated here.
+
+    Note that column storage is easiest to understand in a relational data model, but it applies 
+      equally to nonrelational data. For example, Parquet is a columnar storage format that supports a
+      document data model, based on Google’s Dremel.
+
+
+    fact_sales_table
+
+    date_key   product_sk   store_sk   promotion_sk   customer_sk   quantity   net_price   discount_price
+    -----------------------------------------------------------------------------------------------------
+    140102     69           4          NULL           NULL          1          13.99       13.99
+    140102     69           5          19             NULL          3          14.99       14.99
+    140102     69           5          NULL           191           1          14.99       14.99
+    140102     74           3          23             202           5          0.99        0.89
+    140103     31           2          NULL           NULL          1          2.49        2.49
+    140103     31           3          NULL           NULL          3          14.99       9.99
+    140103     31           3          21             123           1          49.99       39.99
+    140103     31           8          NULL           233           1          0.99        0.99
+
+
+    Columnar Storage Layout
+    ----------------------------
+    data_key file contents: 140102, 140102, 140102, 140102, 140103, 140103, 140103, 140103
+    product_sk file contents: 69, 69, 69, 74, 31, 31, 31, 31
+    store_sk file contents: 4, 5, 5, 3, 2, 3, 3, 8
+    promotion_sk file contents: NULL, 19, NULL, 23, NULL, NULL, 21, NULL
+    customer_sk file contents: NULL, NULL, 191, 202, NULL, NULL, 123, 233
+    quantity file contents: 1, 3, 1, 5, 1, 3, 1, 1
+    net_price file contents: 13.99, 14.99, 14.99, 0.99, 2.49, 14.99, 49.99, 0.99
+    discount_price file contents: 13.99, 9.99, 14.99, 0.89, 2.49, 9.99, 39.99, 0.99
+
+
+    The column-oriented storage layout relies on each column file containing the rows in the same order.
+      Thus, if you need to reassemble an entire row, you can take the 23rd entry from each of the
+      individual column files and put them together to form the 23rd row of the table.
