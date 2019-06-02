@@ -97,3 +97,40 @@ CHAPTER 3B - STORAGE AND RETRIEVAL - TRANSACTIONS AND ANALYTICS
       databases (using either a periodic data dump or a continuous stream of updates), transformed 
       into an analysis-friendly schema, cleaned up, and then loaded into the data warehouse. This 
       process of getting data into the warehouse is known as Extract–Transform–Load (ETL).
+
+    Data warehouses now exist in almost all large enterprises, but in small companies they are 
+      almost unheard of. This is probably because most small companies don’t have so many different 
+      OLTP systems, and most small companies have a small amount of data—small enough that it can be 
+      queried in a conventional SQL database, or even analyzed in a spreadsheet. In a large company, 
+      a lot of heavy lifting is required to do something that is simple in a small company.
+
+    A big advantage of using a separate data warehouse, rather than querying OLTP systems directly 
+      for analytics, is that the data warehouse can be optimized for analytic access patterns. It 
+      turns out that the indexing algorithms discussed in the first half of this chapter work well 
+      for OLTP, but are not very good at answering analytic queries. In the rest of this chapter 
+      we will look at storage engines that are optimized for analytics instead.
+
+
+
+- The Divergence Between OLTP Databases and Data Warehouses
+
+    The data model of a data warehouse is most commonly relational, because SQL is generally a good 
+      fit for analytic queries. There are many graphical data analysis tools that generate SQL 
+      queries, visualize the results, and allow analysts to explore the data (through operations 
+      such as drill-down and slicing and dicing).
+
+    On the surface, a data warehouse and a relational OLTP database look similar, because they 
+      both have a SQL query interface. However, the internals of the systems can look quite different,
+      because they are optimized for very different query patterns. Many database vendors now 
+      focus on supporting either transaction processing or analytics workloads, but not both.
+
+    Some databases, such as Microsoft SQL Server and SAP HANA, have support for transaction processing 
+      and data warehousing in the same product. However, they are increasingly becoming two separate 
+      storage and query engines, which happen to be accessible through a common SQL interface.
+
+    Data warehouse vendors such as Teradata, Vertica, SAP HANA, and ParAccel typically sell their 
+      systems under expensive commercial licenses. Amazon RedShift is a hosted version of ParAccel. 
+      More recently, a plethora of open source SQL-on-Hadoop projects have emerged; they are young 
+      but aiming to compete with commercial data warehouse systems. These include Apache Hive, 
+      Spark SQL, Cloudera Impala, Facebook Presto, Apache Tajo, and Apache Drill. Some of them are 
+      based on ideas from Google’s Dremel.
