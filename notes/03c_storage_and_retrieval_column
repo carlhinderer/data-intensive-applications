@@ -151,3 +151,9 @@ CHAPTER 3C - STORAGE AND RETRIEVAL - COLUMN-ORIENTED STORAGE
       However, it is very misleading to call them column-oriented: within each column family, they 
       store all columns from a row together, along with a row key, and they do not use column 
       compression. Thus, the Bigtable model is still mostly row-oriented.
+
+
+
+- Memory Bandwidth and Vectorized Processing
+
+    

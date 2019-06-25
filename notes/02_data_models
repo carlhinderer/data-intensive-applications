@@ -54,7 +54,7 @@ CHAPTER 2 - DATA MODELS & QUERY LANGUAGES
 
 
 
-- Convergence of Document and Relational Databasese
+- Convergence of Document and Relational Databases
 
     - Most relational databases have supported XML data types since the mid 2000s
     - Many relational databases now support JSON as well
@@ -98,17 +98,17 @@ CHAPTER 2 - DATA MODELS & QUERY LANGUAGES
     
     # MongoDB MapReduce query to get same data
     db.observations.mapReduce(
-        function map() { 2
+        function map() {
             var year  = this.observationTimestamp.getFullYear();
             var month = this.observationTimestamp.getMonth() + 1;
-            emit(year + "-" + month, this.numAnimals); 3
+            emit(year + "-" + month, this.numAnimals);
         },
-        function reduce(key, values) { 4
-            return Array.sum(values); 5
+        function reduce(key, values) {
+            return Array.sum(values);
         },
         {
-            query: { family: "Sharks" }, 1
-            out: "monthlySharkReport" 6
+            query: { family: "Sharks" },
+            out: "monthlySharkReport"
         }
     );
 
