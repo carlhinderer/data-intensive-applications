@@ -1,0 +1,48 @@
+
+[Contents]
+
+Part 1: Foundations of Data Systems
+
+  1. Introducing Terminology
+     Discussion of Reliability, Scalability, and Maintainability
+
+  2. Comparison of Different Data Models and Query Languages
+     Databases from a Developer's Point of View
+
+  3. Internals of Storage Engines and How Databases Lay Out Data on Disk
+
+  4. Various Formats for Data Encoding (Serialization)
+     How the Different Formats Fare When Schemas Change Over Time
+
+
+Part 2: Distributed Data
+        What Happens If Multiple Machies Are Involved With Storage and Retrieval of Data
+
+  5. Replication
+     Having Multiple Copies of the Data on Different Nodes
+
+  6. Partitioning
+     The Need to Break Up Large Datasets Into Partitions (aka Sharding)
+
+  7. Transactions
+     Issues With Grouping Several Reads and Writes Together Into a Logical Unit
+
+  8. Problems With Distributed Systems
+     Hardware Failures, Unreliable Systems, Unreliable Clocks
+
+  9. Consistency and Consensus
+     Examples of Algorithms and Protocols For Building Distributed Systems
+     Seek Abstractions That Can Allow an Application to Ignore Distributed System Problems
+
+
+Part 3: Derived Data
+        Integrating Multiple Different Data Systems Into a Coherent Architecture
+        
+  10. Batch-Oriented Dataflow Systems
+      MapReduce
+
+  11. Data Streams
+      Processing Data With Shorter Delays
+
+  12. The Future of Data Systems
+      How We Can Improve Design
