@@ -1,0 +1,50 @@
+------------------------------------------------------------
+CHAPTER 1 - DATA WAREHOUSING PRIMER
+------------------------------------------------------------
+
+- Goals of Data Warehousing
+
+    1. The DW/BI system must make information easily accessible.
+
+         - Content must intuitive and obvious to the business user, not just the develop.
+         - Data structures and labels should mimic the business users' thought process and vocabulary.
+         - Applications must be simple and easy to use.
+         - Queries must return results with minimal wait times.
+
+
+    2. The DW/BI system must present information consistently.
+
+         - Data must be carefully assembled, cleaned, QA'ed, and released only when fit for users.
+         - Common labels and definitions should be used across all data sources.
+         - Two performance measurements that have the same name should mean the same thing.
+
+
+    3. The DW/BI system must adapt to change.
+
+         - The system must be designed to handle inevitable change gracefully.
+         - Existing data and applications should not be disrupted when new questions or new data arise.
+         - If data must be changed, the changes must be transparent to users.
+
+
+    4. The DW/BI system must present information in a timely way.
+
+         - Raw data may need to be converted into actionable information in hours, minutes, or seconds.
+         - The DW/BI team and business users need to have realistic expectations for real-time data.
+
+
+    5. The DW/BI system must be a secure bastion that protects the information assets.
+
+         - The organization's informational crown jewels are stored in the data warehouse.
+         - The system must effectively control access to the organization's confidential information.
+
+
+    6. The DW/BI system must be the authoritative and trustworthy foundation for improved decision making.
+
+         - The system must have the right information to support decision making.
+         - The original name for a DW/BI system was a 'Decision Support System'.
+
+
+    7. The business community must accept the DW/BI system to deem it successful.
+
+         - If the business community doesn't use the system, it has failed the acceptance test.
+         - Business users will embrace the system if it is simple, fast, and provides useful information.
