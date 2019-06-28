@@ -48,3 +48,75 @@ CHAPTER 1 - DATA WAREHOUSING PRIMER
 
          - If the business community doesn't use the system, it has failed the acceptance test.
          - Business users will embrace the system if it is simple, fast, and provides useful information.
+
+
+
+- Dimensional Modeling
+
+    - Dimensional modeling is widely accepted as the preferred technique for presenting analytic data.
+        It addresses 2 simultaneous requirements:
+
+        1. Deliver data that's understandable to the business users
+        2. Deliver fast query performance
+
+
+    - An executive may describe her business as "We sell products in various markets and measure our
+        performance over time."  It is intuitive to think of such a business as a cube, with the
+        axes labeled 'product', 'market', and 'time'.  
+
+
+    - Normalized 3NF structures, correlated with ER diagrams, are immensely useful in operational
+        processing because an update or insert transaction only touches the database in one place.
+        Normalized models, however, are too complicated for BI queries.  Likewise, most RDBMS's
+        can't effectively query a normalized model, because the complexity of users' unpredictable
+        queries overwhelms the database optimizers.
+
+
+
+- Star Schemas vs OLAP Cubes
+
+    - Dimensional models implemented in RDBMS's are referred to as 'star schemas' because of their
+        resemblance to a star-like structure.
+
+
+                 Market Dimension             Date Dimension
+                                  \        /
+                                     Sales  
+                                     Facts  ---   Product Dimension
+
+
+    - Dimensional models implemented in multidimensional DB environments are referred to as 'OLAP Cubes'.
+
+
+                            |    /
+                            |   /
+                            |  /
+                    Market  | / Product
+                            |/
+                            -----------
+                             Date
+
+
+    - Both stars and cubes have a common logical design with recognizable dimensions.  However, the 
+        physical implementation differs.  When data is loaded into an OLAP cube, it is stored and indexed
+        using techniques designed for dimensional data.
+
+
+    - The downside of using OLAP cubes is that you pay a load performance price for the OLAP query
+        capabilities.  For this reason, most multidimensional modeling is done with relational star
+        schemas.
+
+
+
+- OLAP Cube Deployment Considerations
+
+    - A star schema hosted in a RDBMS is a good physical foundation for building an OLAP cube, and
+        is a more stable basis for backup and recovery.
+
+    - OLAP cubes have performance advantages over time, but RDBMS's have been catching up.
+
+    - OLAP cubes are more variable across vendors than RDBMS's, making them harder to port.
+
+    - OLAP cubes tend to have more fine-grained security options.
+
+    - OLAP cubes offer significantly richer analysis capabilities.
