@@ -120,3 +120,73 @@ CHAPTER 1 - DATA WAREHOUSING PRIMER
     - OLAP cubes tend to have more fine-grained security options.
 
     - OLAP cubes offer significantly richer analysis capabilities.
+
+
+
+- Fact Tables for Measurements
+
+    - The 'fact table' is a dimensional model that store the performance measurements resulting from
+        an organization's business process events.  You should strive to store the low-level measurement
+        data resulting from a business process in a single dimensional model.
+
+
+    - Because measurement data is overwhelmingly the largest set of data, it should not be replicated
+        in multiple places for multiple organizational functions around the enterprise.  Allowing
+        business users from multiple organizations to access a single centralized repository for each
+        set of measurement data ensures consistent data throughout the enterprise.
+
+
+    - The term 'fact' represents a business measure.  For example, a purchase at a retail store
+        translates into:
+
+          Retail Sales Facts
+          ------------------
+          Date Key (FK)
+          Product Key (FK)
+          Store Key (FK)
+          Promotion Key (FK)
+          Customer Key (FK)
+          Clerk Key (FK)
+          Transaction #
+          Sales Dollars
+          Sales Units
+
+
+    - Each row in the fact table corresponds to a measurement event.  The data on each row is at a 
+        specific level of detail, referred to as the 'grain', such as one row per product sold on a 
+        sales transaction.  Having the discipline to create fact tables with a single level of detail
+        ensures that measurements aren't double counted.
+
+      The idea that a measurement event in the physical world has a one-to-one relationship to a single
+        row in the corresponding fact table is a bedrock principle for dimensional modeling.  Everything
+        else builds from this foundation.
+
+
+    - Facts are often described as continuously valued to help sort out what is a fact vs what is a
+        dimension attribute.  The dollar sales amount fact is continuously valued in this example.
+
+      Measured facts are rarely textual.  In most cases, a textual measurement is drawn from a discrete
+        list of values.  Unless the text is unique for every row in the fact table, it belongs in the
+        dimension table.
+
+
+    - Despite being sparse, fact tables usually make up 90% or more of the total space consumed by the
+        dimensional model.
+
+
+    - All fact table grains fall into one of 3 categories:
+
+        1. Transaction
+        2. Periodic Snapshot
+        3. Accumulating Snapshot
+
+      Transaction grain fact tables are the most common.
+
+
+    - All fact tables have 2 or more foreign keys that connect to dimension tables primary keys.  For
+        example, the product key in the fact table always matches a specific product key in the product
+        dimension table.
+
+
+    - The fact table generally has its own primary key composed of a subset of the foreign keys.  This
+        key is often called a 'composite key'.  
