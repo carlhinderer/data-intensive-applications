@@ -272,3 +272,29 @@ CHAPTER 1 - DATA WAREHOUSING PRIMER
 
       Because dimensional tables are so much smaller than fact tables, improving storage efficiency by
         snowflaking has virtually no impact on the overall database size.
+
+
+
+- Presentation Area to Support Business Intelligence
+
+    - Now, we'll bring the fact tables and dimensional tables together into a dimensional model.  Each
+        business process is represented by a dimensional model that consists of a fact table containing
+        the event's numeric measurements surrounded by a halo of dimensional tables.  This
+        characteristic star-like structure is often called a 'star join'.
+
+
+                                  Retail Sales Facts
+                                  ------------------
+             Date Dimension ----  Date Key (FK)
+                                  Product Key (FK)   ---- Product Dimension
+            Store Dimension ----  Store Key (FK)
+                                  Promotion Key (FK) ---- Promotion Dimension
+         Customer Dimension ----  Customer Key (FK)
+                                  Clerk Key (FK)     ---- Clerk Dimension
+                                  Transaction #
+                                  Sales Dollars
+                                  Sales Units
+
+
+    - The dimensional schema is simple and highly recognizable to business users.  The simplicity also
+        has performance benefits.  
