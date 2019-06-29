@@ -297,4 +297,60 @@ CHAPTER 1 - DATA WAREHOUSING PRIMER
 
 
     - The dimensional schema is simple and highly recognizable to business users.  The simplicity also
-        has performance benefits.  
+        has performance benefits, since there are fewer joins.  By heavily indexing the dimension
+        tables, the optimizer can evaluate arbitrary n-way joins to the fact table in a single pass
+        through the fact table's index.
+
+
+    - Dimensional models are gracefully extensible to accomodate change, because the model has no
+        built-in bias regarding expected query patterns.
+
+
+
+- Kimball's DW/BI Architecture
+
+    - There are 4 separate and distinct components to consider in the DW/BI environment:
+
+        1. Operational source systems
+        2. ETL systems
+        3. Data presentation area
+        4. Business intelligence applications
+
+
+        SOURCE         ->    ETL      ->     PRESENTATION    ->    BI
+        TRANSACTIONS         SYSTEM          AREA                  APPLICATIONS
+
+
+    - Operational Source Systems
+
+        - Operational source systems are systems of record that capture the business's transactions.  
+            Operational queries are narrow, one-record-at-a-time queries that are part of the normal
+            transaction flow.  
+
+        - Source systems are not queried in the broad, unexpected ways that DW/BI systems are.  
+
+        - Source systems maintain little historical data.  A good DW can relieve the source systems of
+            much of the responsibility of representing the past.
+
+        - In many cases, the source systems are special purpose applications without any commitment to
+            sharing common data such as a product, customer, geography, or calendar within other
+            operational systems in the organization.  Of course, a broadly adopted ERP system could
+            help address these shortcomings.
+
+
+    - ETL System
+
+        - The ETL system of a DW/BI environment consists of a work area, instantiated data structures,
+            and a set of processes.  
+
+        - 'Extraction' means reading and understanding the source data and copying the data needed into
+            the ETL system for further manipulation.
+
+        - 'Transformations' include cleansing data (correcting misspellings, resolving domain conflicts,
+            dealing with missing elements, etc.), combining data, and removing duplicates.  
+
+          In addition, these activities can be architected to create diagnostic metadata, eventually 
+            leading to business process re-engineering to improve data quality in the source systems over 
+            time.
+
+        = 
