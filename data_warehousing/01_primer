@@ -139,6 +139,7 @@ CHAPTER 1 - DATA WAREHOUSING PRIMER
     - The term 'fact' represents a business measure.  For example, a purchase at a retail store
         translates into:
 
+
           Retail Sales Facts
           ------------------
           Date Key (FK)
@@ -190,3 +191,84 @@ CHAPTER 1 - DATA WAREHOUSING PRIMER
 
     - The fact table generally has its own primary key composed of a subset of the foreign keys.  This
         key is often called a 'composite key'.  
+
+
+
+- Dimension Tables for Descriptive Context
+
+    - 'Dimension tables' are integral companions to a fact table.  The dimension tables contain the
+        textual context associated with a business process measurement event.  They describe the
+        'who, what, where, when, why, and how' associated with the event.  
+
+
+    - Dimension tables often have many columns or attributes.  It is not uncommon for a dimension table
+        to have 50-100 attributes.  Each dimension is defined by a single primary key which serves as
+        the basis for referential integrity with any given fact table to which it is joined.
+
+
+        Product Dimension
+        ----------------------------
+        Product Key (PK)
+        SKU Number (Natural Key)
+        Product Description
+        Brand Name
+        Category Name
+        Department Name
+        Package Type
+        Package Size
+        Abrasive Indicator
+        Weight
+        Weight Unit of Measure
+        Storage Type
+        Shelf Life Type
+        Shelf Width
+        Shelf Height
+        Shelf Depth
+        ...
+
+
+    - Dimension attributes serve as the primary source of query constraints, groupings, and report
+        labels.  For example, when a user wants to see 'dollar sales by brand', 'brand' must be 
+        available as a dimension attribute.
+
+
+    - Dimension attributes are critical to making the DW/BI system usable and understandable.  
+        Attributes should consist of real words rather than cryptic abbreviations.  Instead of making
+        business users memorize operational codes, make standard decodes available as dimension 
+        attributes.
+
+
+    - In many ways, the data warehouse is only as good as the dimension attributes.  The analytic power
+        of the DW/BI environment is directly proportional to the quality and depth of the dimension
+        attributes.  The more time spent providing attributes with verbose business terminology, the
+        better.  
+
+
+
+- Normalization of Dimension Tables
+
+    - Dimension tables often represent hierarchical relationships.  For example, products roll up into
+        brands and then into categories.
+
+
+        Product Key     Product Description     Brand Name     Category Name
+        -----------------------------------------------------------------------------
+        1               PowerAll 20oz           PowerClean     All Purpose Cleaner
+        2               PowerAll 32oz           PowerClean     All Purpose Cleaner
+        3               PowerAll 48oz           PowerClean     All Purpose Cleaner
+        4               PowerAll 64oz           PowerClean     All Purpose Cleaner
+        5               ZipAll 20oz             Zippy          All Purpose Cleaner
+        6               ZipAll 32oz             Zippy          All Purpose Cleaner
+        7               ZipAll 48oz             Zippy          All Purpose Cleaner
+        8               Shiny 20oz              Clean Fast     Glass Cleaner
+        9               Shiny 32oz              Clean Fast     Glass Cleaner
+        10              ZipGlass 20oz           Zippy          Glass Cleaner
+        11              ZipGlass 32oz           Zippy          Glass Cleaner
+
+
+    - The hierarchical descriptive information is stored redundantly in the spirit of ease of use and
+        query performance.  You should resist the urge to normalize dimensional tables, a practice which
+        is known as 'snowflaking'.  
+
+      Because dimensional tables are so much smaller than fact tables, improving storage efficiency by
+        snowflaking has virtually no impact on the overall database size.
