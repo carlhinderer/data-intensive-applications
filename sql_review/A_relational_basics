@@ -187,3 +187,12 @@ A - Relational Basics
     SELECT E.Fname, E.Lname, S.Fname, S.Lname
     FROM EMPLOYEES AS E, EMPLOYEES AS S
     WHERE E.Super_ssn = S.Ssn;
+
+
+
+- Query Example #4 - Fully-Qualified Attributes
+
+    SELECT EMPLOYEE.Fname, EMPLOYEE.Lname, EMPLOYEE.Address
+    FROM EMPLOYEE, DEPARTMENT
+    WHERE DEPARTMENT.Dname = 'Research'
+      AND DEPARTMENT.Dnumber = EMPLOYEE.Dno;
