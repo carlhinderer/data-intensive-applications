@@ -1,0 +1,32 @@
+----------------------------------------------------
+A - Relational Basics
+----------------------------------------------------
+
+- Reasons for using RDBMS
+
+    1. Controlling redundancy
+    2. Restricting access
+    3. Persistent storage
+    4. Efficient querying
+    5. Backup and recovery
+    6. Multiple user interfaces
+    7. Complex relationships among data
+    8. Enforcing integrity constraints
+    9. Enforcing rules
+
+
+- Relational Model Terminology
+
+    - A relational schema R is made up of a name R and a list of attributes A1, A2, ... , An
+
+    - The domain D of possible values in Ai is denoted dom(Ai)
+
+    - The degree of a relation is the number of attributes in its schema
+
+      # Here is a relation of degree 7
+      STUDENT(Name, Ssn, Home_phone, Address, Office_phone, Age, Gpa)
+
+    - A relation r of a relational schema R is a set of n-tuples.
+
+
+
