@@ -142,7 +142,7 @@ A - Relational Basics
 
     - For instance, if the employee's supervisor is set as
 
-        FOREIGN KEY (Superssn) REFERENCES EMPLOYEE (Ssn)
+        FOREIGN KEY (Super_ssn) REFERENCES EMPLOYEE (Ssn)
         ON DELETE SET NULL
         ON UPDATE CASCADE
 
@@ -152,3 +152,38 @@ A - Relational Basics
 
     - The ON DELETE CASCADE option means that if a tuple is deleted, all referencing tuples are deleted
         also.
+
+
+
+- Query Example #1 - Join Condition in WHERE Clause
+
+    # Retrieve the name and address of all employees who work for the research department
+
+    SELECT Fname, Lname, Address
+    FROM EMPLOYEE, DEPARTMENT
+    WHERE Dname = 'Research' 
+      AND Dnumber = Dno;
+
+
+
+- Query Example #2 - Two Join Conditions in WHERE Clause
+
+    # For every project located in 'Stafford', list the project number, the controlling dept number,
+    #   and the dept managers last name, address, and birth date
+
+    SELECT Pnumber, Dnum, Lname, Address, Bdate
+    FROM PROJECT, DEPARTMENT, EMPLOYEE
+    WHERE Dnumber = Dnum 
+      AND Mgr_ssn = Ssn 
+      AND Plocation = 'Stafford;
+
+
+
+- Query Example #3 - Aliasing Relations
+
+    # For each employee, retrieve the employee's first and last name, and retrieve the first and last
+    #   name of their supervisor
+
+    SELECT E.Fname, E.Lname, S.Fname, S.Lname
+    FROM EMPLOYEES AS E, EMPLOYEES AS S
+    WHERE E.Super_ssn = S.Ssn;
