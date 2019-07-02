@@ -77,3 +77,45 @@ Normalization
         -----------------------            -----------------------------------------
         Ssn(PK)     Ename                  Pnumber(PK)     Pname     Plocation
         -----------------------            -----------------------------------------
+
+
+
+- 3NF
+
+    - A relation schema R is in 3NF if no nonprime attribute of R is transitively dependent on the primary
+        key.  
+
+
+    - Relations should not have a nonkey attribute functionally determined by another nonkey attribute (or
+        a set of nonkey attributes).  There should be no transitive dependency of a nonkey attribute on
+        the primary key.
+
+
+    - Decompose and set up a relation that includes the nonkey attribute(s) that functionally determine
+        other nonkey attribute(s).
+
+
+    - Example:
+
+        Before Normalization:
+
+        EMP_DEPT
+        ---------------------------------------------------------------------------------
+        Ename     Ssn(PK)     Bdate     Address     Dnumber     Dname     Dmgr_ssn
+        ---------------------------------------------------------------------------------
+
+          Here, 'Dname' and 'Dmgr_ssn' are dependent only on 'Dnumber'.  They have no relation to
+            the primary key.
+
+
+        After Normalization:
+
+        EMPLOYEES
+        --------------------------------------------------------
+        Ename     Ssn(PK)     Bdate     Address     Dnumber
+        --------------------------------------------------------
+
+        DEPARTMENT
+        ----------------------------------------
+        Dnumber(PK)     Dname     Dmgr_ssn
+        ----------------------------------------
