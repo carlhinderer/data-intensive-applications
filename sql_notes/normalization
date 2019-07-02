@@ -8,6 +8,9 @@ Normalization
         a single value from the domain.  Multivalued attributes are not allowed.
 
 
+    - The solution is to form new relations with each multivalued attribute or nested relation.
+
+
     - Example
 
         Before Normalization:
@@ -32,3 +35,45 @@ Normalization
         Research          5              333445555       Houston
         Administration    4              987654321       Stafford
         Headquarters      1              888665555       Houston
+
+
+
+- 2NF
+
+    - A relation schema R is in 2NF if every nonprime attribute A in R is fully functionally dependent
+        on the primary key of R.
+
+
+    - For relations where primary key contains multiple attributes, no nonkey attribute should be
+        functionally dependent on a part of the primary key.  
+
+
+    - The solution is to decompose and set up a new relation for each partial key with its dependent
+        attributes.  Make sure to keep a relation with the original primary key and any attributes that
+        are fully functionally dependent on it.
+
+
+    - Example:
+
+        Before Normalization:
+
+        EMP_PROJ
+        ----------------------------------------------------------------------------
+        Ssn(PK)     Pnumber(PK)     Ename     Pname     Plocation
+        ----------------------------------------------------------------------------
+
+          Here, 'Ename' is dependent on 'Ssn', but not on 'Pnumber'
+          Also, 'Pname' and 'Plocation' are dependent on 'Pnumber', but not on 'Ssn'
+
+
+        After Normalization:
+
+        EP1
+        ----------------------------------------
+        Ssn(PK)     Pnumber(PK)     Hours
+        ----------------------------------------
+
+        EP2                                EP3
+        -----------------------            -----------------------------------------
+        Ssn(PK)     Ename                  Pnumber(PK)     Pname     Plocation
+        -----------------------            -----------------------------------------
