@@ -1,0 +1,34 @@
+----------------------------------------------------
+Normalization
+----------------------------------------------------
+
+- 1NF
+
+    - The domain of an attribute must include only atomic values, and the value of any attribute must
+        a single value from the domain.  Multivalued attributes are not allowed.
+
+
+    - Example
+
+        Before Normalization:
+
+        DEPARTMENT
+        ----------------------------------------------------------------------------
+        DName             DNumber(PK)    Dmgr_ssn        Dlocations
+        ----------------------------------------------------------------------------
+        Research          5              333445555       {Bellaire, Sugarland, Houston}
+        Administration    4              987654321       {Stafford}
+        Headquarters      1              888665555       {Houston}
+
+
+        After Normalization:
+
+        DEPARTMENT
+        ----------------------------------------------------------------------------
+        DName             DNumber(PK)    Dmgr_ssn        Dlocation(PK)
+        ----------------------------------------------------------------------------
+        Research          5              333445555       Bellaire
+        Research          5              333445555       Sugarland
+        Research          5              333445555       Houston
+        Administration    4              987654321       Stafford
+        Headquarters      1              888665555       Houston
