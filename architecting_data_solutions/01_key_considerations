@@ -352,4 +352,68 @@ CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
 
 
 
-               
+- Data Management and Governance
+
+    - A robust data collection system today must have 2 critical features:
+
+        1. Data Model Management = the ability to change or add data models
+
+        2. Data Regulation = the ability to know everything that is being collected and the risks that
+                               might exist if the data is misused or exposed
+
+
+    - You need to have mechanisms in place to capture your system's data models.  Ideally, this should
+        mean that groups using your data pipeline don't need to engage your team to make a new data
+        feed or change an existing data feed.
+
+
+    - An example of a system that provides an approach for capturing the schema is 'Confluent Schema
+        Registry' for Kafka, which allows for the storate of multiple versions of schemas.  This 
+        provides support for backward compatibility for different versions of applications that access
+        data in the system.
+
+
+    - Declaring a schema is only part of the problem.  You might also need the following mechanisms:
+
+        1. Registration
+
+             The definition of a new data feed along with its schema
+
+
+        2. Routing
+
+             Which data feeds should go to which topics, processing systems, and possible storage
+               systems.
+
+
+        3. Sampling
+
+             An extension to routing, with the added feature of removing part of the data.  This is 
+               ideal for staging environment and for testing.
+
+
+        4. Access Controls
+
+             Who will be able to see the data, both in final persisted state and off the stream.
+
+
+        5. Metadata Captured
+
+             The ability to attach metadata to the fields.
+
+
+      Additional features that you will find in more advanced systems include:
+
+        6. Transformational Logic
+
+             The ability to transform the data in custom ways before it lands in the staging areas.
+
+
+        7. Aggregation and Sessionization
+
+             Transformational logic that understands how to perform operations on data windows.
+
+
+    - As more data is collected, stored, and analyzed, concern for things like data protection and privacy
+        have grown.  This means you need to have plans in place for responding to regulation, as well as
+        protecting against external hacks, internal misuse, and so on.
