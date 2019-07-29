@@ -163,6 +163,98 @@ CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
 
 - Source Data Consumption: Embedded Code
 
+    - The following guidelines should be considered when implementing embedded code as part of a source
+        data collection:
+
+        1. Limit Implementation Languages
+
+             Don't try to support multiple languages.  Instead, implement with a simple language and
+               use bindings for other languages as needed.  For example, consider using C, C++, or Java,
+               and then create bindings for other languages you need to support.
+
+             For example, Kafka includes a Java producer and consumer as part of the core project, 
+               whereas other libraries or clients require binding to languages included as part of the
+               Kafka distribution.
+
+
+        2. Limit Dependencies
+
+             Potential library conflicts are a problem with any embedded code.  Making efforts to limit
+               dependencies can help mitigate this issue.
+
+
+        3. Provide Visibility
+
+             With any embedded code, there can be concerns about what is under the hood.  Providing 
+               access to code, by open sourcing the code or at least providing a public repository,
+               provides an easy and safe way to relieve these fears.
+
+
+        4. Operationalizing Code
+
+             Possible production issues with embedded code must also be considered.  Make sure things
+               like memory leaks and performance issues have been taken into account.  Have a defined
+               support model.  Logging and instrumentation of code can help to ensure we have the 
+               ability to debug issues when they arise.
+
+
+        5. Version Management
+
+             When code is embedded, you won't be able to control the scheduling of updates.  Ensuring
+               backwards compatibility and well-defined versions is key.
+
+
+
 - Source Data Consumption: Agents
 
+    - These guidelines should be considered when using agents in your architecture:
+
+        1. Deployment
+
+             As with other components in your architecture, make sure deployment of agents is tested
+               and repeatable.  This might mean using containers or some other type of automation tool.
+
+
+        2. Resource Usage
+
+             Ensure that the source systems have sufficient resources to reliably support the agent 
+               processes, including CPU, memory, etc.
+
+
+        3. Isolation
+
+             Even though agents run externally from the processing applications, you'll still want to
+               protect against problems with the agent that can negatively affect data collection.
+
+
+        4. Debugging
+
+             Again, we need to take steps to ensure we can debug and recover from inevitable production
+               issues.  This means logging, instrumentation, etc.
+
+
+
 - Source Data Consumption: Interfaces
+
+    - These guidelines should be considered when using interfaces in your architecture:
+
+        1. Versioning
+
+             Versioning is an issue here also, although less painful than the embedded solution.  Make
+               sure your interface has versioning as a core concept from day one.
+
+
+        2. Performance
+
+             With any source collection framework, performance and throughput are critical.  Even if you
+               design and implement code to ensure performance, you might still find that source or
+               sink implementations are suboptimal.  Because you might not control this code, having a 
+               way to detect and notify performance issues is important.
+
+
+        3. Security
+
+             While in the agent and embedded models you control the code that is talking to you, in the 
+               interface model you will have only the interface as a barrier to entry.  The key is to
+               keep the interface simple while still injecting security.  Models such as security
+               tokens are used for this.
