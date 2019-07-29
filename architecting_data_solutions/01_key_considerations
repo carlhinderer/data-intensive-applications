@@ -1,0 +1,88 @@
+----------------------------------------------------
+CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
+----------------------------------------------------
+
+- Major Data Project Types
+
+    1. Data Pipelines and Data Staging
+
+         These are ETL-type projects that provide the basis for performing subsequent analysis and
+           processing of data.
+
+
+    2. Data Processing and Analysis
+
+         These are projects that end in providing some kind of actionable value, like the creation of
+           reports or machine learning models.
+
+
+    3. Applications
+
+         These are data frameworks meant to support live operational needs of applications, like the
+           data backends for web or mobile applications.
+
+
+
+- Aspects of the Project Types
+
+    1. Primary Considerations
+
+         Each of the 3 project types have distinctions that will affect architectural decisions and 
+           priorities.  The decisions will drive the rest of the project.  
+
+
+    2. Risk Management
+
+         Each project type has a set of associated risks.  There are often multiple approaches to risk
+           management based on specific use cases.
+
+
+    3. Team Makeup
+
+         The types of skills, experience, and interests will vary with the different project types, so
+           we provide some recommendatations around building successful teams for each project type.
+
+
+    4. Security
+
+         Security is an extensive and important topic we can't go into a ton of detail on here, but 
+           we'll enumerate the security concerns we need to keep in mind throughout our projects.
+
+
+
+- Fundamental Security Dimensions
+
+    1. Authentication
+
+         This involves ensuring that users accessing the system are who they claim to be.  Any mature
+           system should offer support for strong authentication.  This is typically done with an
+           authentication protocol like Kerberos or LDAP.
+
+
+    2. Authorization
+
+         After ensuring that a valid user is accessing a system, we need to determine which data they're
+           allowed to access.  A mature system will allow access to be controlled at different levels
+           of granularity, such as at both the table-level and column-level.  
+
+
+    3. Encrpytion
+
+         We encrypt data to protect it from malicious users and intrusions.  We need to consider this from
+           2 different angles:
+
+           - Data at rest = This is data stored on disk.  Many vendors have solutions for managing this.
+
+           - Data on the wire = This is data moving through the system.  Generally, this is supported via
+               standard encryption mechanisms like TLS.
+
+
+    4. Auditing
+
+         We must be able to capture activity related to data in our system, including the lineage of the
+           data, who is accessing it, how it is being used, and so on.  Again here, many vendors offer
+           tools to manage this.
+
+
+
+- 
