@@ -85,4 +85,84 @@ CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
 
 
 
-- 
+- Project Type #1: Data Pipelines and Data Staging
+
+    - This project type has the widest scope of the 3, because it involves the path from external data
+        sources to destination data sources, and will provide the basis for building out the rest of
+        our data use cases.
+
+
+    - We need to design our solution with these things in mind:
+
+        1. Types of queries, processing, and so on that we'll be performing against the destination data
+
+        2. Any customer-facing data requirements
+
+        3. Types of data collected in terms of its value
+
+
+    - It is crucial that we pay careful attention to modeling and storing the data in a way that 
+        facilitates further access.
+
+
+    - Primary Concerns and Risk Management
+
+        1. Consumption of source data
+
+        2. Guarantees around data delivery
+
+        3. Data governance
+
+        4. Latency and confirmations of delivery
+
+        5. Access patterns against the destination data
+
+
+
+- Source Data Consumption
+
+    - Sources can be anything from phones, sensors, applications, machine logs, operational and
+        transactional databases, etc.  The source itself is mostly out of scope of your pipeline and
+        staging use cases.  
+
+      In fact, you can evaluate the success of your scoping by how much of your time you spend working 
+        with the source team.  The less time your data team spends with the source team, the better the
+        source integration is designed.
+
+
+    - There are several standard approaches used for source data collection:
+
+        1. Embedded Code
+
+             This is when you provide code embedded within the source system that knows how to send 
+               required data into your data pipeline.
+
+
+        2. Agents
+
+             This is an independent system that is close to the source and in many cases is on the same
+               device.  This is different from the embedded code approach, because the agents run as 
+               separate processes with no dependency concerns.
+
+
+        3. Interfaces
+
+             This is the lightest of the options.  Examples include REST or Websocket endpoints that
+               receive data sent by the sources.
+
+
+        4. Other Options
+
+             There are other commonly used options to perform data collection.  For example, there are
+               third party data integration tools, either open source or commercial.  
+
+             Also, there are batch ingest tools such as Apache Sqoop or tools provided with specific
+               projects, such as the HDFS 'put' command.
+
+
+
+- Source Data Consumption: Embedded Code
+
+- Source Data Consumption: Agents
+
+- Source Data Consumption: Interfaces
