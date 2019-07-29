@@ -168,7 +168,7 @@ CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
 
         1. Limit Implementation Languages
 
-             Don't try to support multiple languages.  Instead, implement with a simple language and
+             Don't try to support multiple languages.  Instead, implement with a single language and
                use bindings for other languages as needed.  For example, consider using C, C++, or Java,
                and then create bindings for other languages you need to support.
 
@@ -258,3 +258,98 @@ CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
                interface model you will have only the interface as a barrier to entry.  The key is to
                keep the interface simple while still injecting security.  Models such as security
                tokens are used for this.
+
+
+
+- Risk Management for Data Consumption
+
+    - The risks you need to worry about when building out a data source collection system include
+        everything you would normally worry about in an externally facing API, as well as concerns
+        related to scale.  Major concerns include:
+
+        1. Version Management
+
+             Everyone loves a good API that just works, but the problem is that we can rarely design
+               interfaces that won't require incompatible changes at some point.  You will want to have
+               a robust versioning strategy and a plan for providing backward compatibility guarantees
+               to protect against this, as well as ensuring that this plan is part of your 
+               communication strategy.
+
+
+        2. Impacts from Source Failures
+
+             There are a number of possible failure scenarios at the source layer for which you need to
+               plan.  For example, if you have embedded code that is part of the source execution process,
+               a failure in your code can lead to a overall failure in the data collection.
+
+             Even if you don't have embedded code, if there's a failure in your collection mechanism 
+               such as an agent, how is the source affected?  Is there data loss?  Does this failure 
+               affect uptime for the application?
+
+             The answer is to have options and know your sources and communicate those different options
+               with clear understanding that failure and downtime will happen.  This will allow adding
+               additional safeguards to protect against the possible failure scenarios.
+
+             Although failures in data pipelines should be rare, they will happen.  So, our pipelines
+               need to have mechanisms to alert us when undesired things take place.  Examples include
+               monitoring things like throughput and alerting when metrics are seen to deviate from
+               specific thresholds.  
+
+             Additionally, we may consider having replicated pipelines.  In failure cases, if one pipeline
+               goes down, another can take over.  This helps protect from difficult-to-predict failures
+               like badly configured deployments or a bad build getting pushed.  Ideally, our pipelines
+               should be as simple to deploy as a web application.
+
+
+        3. Protections from Sources that Behave Poorly
+
+             When you build a data ingenstion system, it's possible that sources might misuse your APIs,
+               send too much data, etc.  As you design and implement your system, you must put mechanisms
+               to protect against these risks in place.  
+
+             Throtlling will limit the number of records a source can send you.  As the source sends you
+               more records, your system can increase the time to accept that data.  Additionally, you
+               might need to send a message indicating that the source is making too many connections.
+
+             If your system doesn't provide guarantees, you could simply drop messages if you become
+               overloaded or have trouble processing input data.  If you do drop data, make sure that
+               your clients have full knowledge of when and why.
+
+
+
+- Data Delivery Guarantees
+
+    - When planning a data pipeline, there are a number of promises that you will need to give to the
+        owners of the data you're collecting.  With any data collection system, you can offer different
+        levels of guarantees:
+
+        1. Best Effort
+
+             If a message is sent to you, you try to deliver it, but data loss is possible.  This is
+               suitable when you're not concerned about capturing every event.
+
+             An example might be if you're performing processing on incoming data to capture aggregate
+               metrics for which total precision isn't required.
+
+
+        2. At Least Once
+
+             If a message is sent to you, you might duplicate it, but you won't lose it.  This is the
+               most common use case, since in most cases you'll want to ensure that all events are
+               captured in your pipeline.  
+
+             Note that this might also require adding logic in your pipeline to de-duplicate data, but 
+               in most cases this is easier and less expensive than the exactly-once option.
+
+
+        3. Exactly Once
+
+             If a message is received by the pipeline, you guarantee it will be processed, and will never
+               be duplicated.  This is the most expensive and technically complex option.  
+
+             Although many systems now provide this, you should still consider whether this is necessary
+               or whether you can account for duplicate records in another way.
+
+
+
+               
