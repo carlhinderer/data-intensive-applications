@@ -417,3 +417,73 @@ CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
     - As more data is collected, stored, and analyzed, concern for things like data protection and privacy
         have grown.  This means you need to have plans in place for responding to regulation, as well as
         protecting against external hacks, internal misuse, and so on.
+
+
+
+- Latency
+
+    - Unlike the requirements of a real-time system, a data pipeline normally gets a lot of leeway when
+        it comes to latency and confirmations of delivery.  However, this is a very important area for
+        you to scope and define expectations.  
+
+
+    - Latency is the time it takes from when a source publishes information until that information is
+        accessible by a given processing layer or staging system.  
+
+      To illustrate this, we'll look at the example of a stream-processing application.  For this example,
+        assume we have data coming in through Kafka, and is being consumed by a Flink or Spark Streaming
+        application.  This application might then be sending alerts based on the outcome of processing
+        to downstream systems.  
+
+      In this case, we quantify latency in multiple buckets:
+
+        Source  -->  Kafka  -->  Streaming Application  -->  Kafka  -->  Downstream
+
+        |     A     |     B     |         C           |         D         |
+
+
+        A: This is the time to get from the source to Kafka.  It can be a direct shot, where the time
+             is just to buffer and send over the network.  However, there might be a fan-in architecture
+             that includes load balancers, microservices, or other hops that can result in increased
+             latency.
+
+
+        B: This is the time to get through Kafka.  It depends on a number of things such as the Kafka
+             configuration and consumer configuration.
+
+
+        C: This is the time between when the processing engine receives the event to when it triggers on
+             the event.  With some engines like Spark Streaming, triggering happens on a time interval.
+             With other like Flink, the latency is lower.  This will also be affected by configuration and
+             use cases.
+
+
+        D: Again, this is the time to get into Kafka and be read by Kafka.  Latency here will be highly
+             dependent on buffering and polling configurations in the producer and consumer.
+
+
+
+- Delivery Confirmation
+
+    - With respect to the data pipeline, delivery confirmations let the source know when the data has
+        arrived at different stages in your pipeline and could even let the source know if the data has
+        reached the staging area.
+
+
+    - Here are some guidelines on designing this into your system:
+
+        1. Do you really need confirmation?
+
+             The advantage of confirmation is that it allows the source to resend data in the event of
+               a failure.  Because failure is inevitable, providing confirmation will likely be suitable
+               for most use cases.  However, if this is not required, you can reduce time and complexity
+               by omitting it.
+
+
+        2. How to deliver the confirmation?
+
+             If you need to provide confirmations, you need to add this to your design.  This will likely
+               include selecting software solutions that provide confirmation functionality and
+               bulding logic into any custom code you implement as part of your pipeline.
+
+             Because this can be complex, its best to use existing solutions that provide this.
