@@ -899,3 +899,79 @@ CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
               change as data scales?  Does performance change as the storage solution grows?  How will
               performance be affected by maintenance work?
 
+
+
+- Risk Management for Latency
+
+    - The best way to mitigate risk in relation to performance is to test early and often and always
+        communicate.  Everything around performance should be monitored.  Every connection, whether 
+        internal or external, should be fully documented.  You should question results often.
+
+
+    - Make sure you use interfaces in your design, so that you can swap out implementations.  The odds
+        are high that you'll think of a better strategy after you build the first solution.  
+
+
+
+- State Locality
+
+    - There are a number of places where state can exist.  In a distributed system, we can highlight
+        4 major locations to hold state:
+
+        1. Client
+
+             This is the client-side interface the user is using.  Caching data in the client and 
+               allowing client-side mutation provides high performance and scalability.  
+
+             However, the client is ephemeral, since it can die at any time, causing data loss before the
+               data reaches the server.  Also, the client runs on potentially untrusted hosts with 
+               untrusted users.
+
+
+        2. Server
+
+             This is the server or servers that the client accesses.  On the server we don't need to be
+               concerned with trust issues, but ephemeral data can still be lost.  Also, in a partitioned
+               system, the data is not shared across all partitions.
+
+
+        3. Datacenter
+
+             This is persistence with the local datacenter housing the application servers.  This layer
+               is where you see state persistence for common technologies like relational databases,
+               NoSQL systems, and distributed caches.  The goal with this layer is to store all the
+               state needed for this local region and the server and clients within this region.
+
+             The data in this datacenter will most likely be replicated and protected from failure of
+               one or more nodes, although an entire region can still go down.
+
+
+        4. Multidatacenter
+
+             This is replicated persistence across datacenters.  
+
+
+    - Multidatacenter Models
+
+        There are several models for the multidatacenter scenario:
+
+          A. Replication for disaster recovery
+
+               This configuration can provide protection against data loss if an entire datacenter
+                 becomes unavailable.  This is normally a batch process in which data becomes eventually
+                 consistent across datacenters.  It won't protect against all data loss, but it protects
+                 against most of it.
+
+               One concern is what happens if items are being mutated in multiple regions at the same
+                 time.  We don't have globally consistent state, so there is no single source of truth.
+
+
+          B. Locking
+
+               Global locking is one way to ensure consistency across regions in case of mutated data.
+                 The idea is that a resource is globally locked to a region.  No one can mutate that
+                 data source until they get the lock.
+
+               The locking can be implemented in the client (every client must obtain a lock to change
+                 the record), at the datacenter (all mutations have to go through a given datacenter
+                 first), or at the record level (using a quorum).
