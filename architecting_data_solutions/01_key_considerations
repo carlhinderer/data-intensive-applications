@@ -827,3 +827,75 @@ CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
 
              Communication experts can evangelize the solutions so that they get to reach their full
                potential.  These are usually project managers, product managers, or technical leads.
+
+
+
+- Project Type #3: Application Development
+
+    - Whereas the first 2 project types are focused on exploring data and gaining value from that data,
+        the final case is about deploying applications that use our data to provide some service to
+        users, either internal or external.  An example is a website that relies on data to drive
+        functionality.
+
+
+    - The assumption here is that the data is being used to drive applications that support large numbers
+        of users, requiring scalability, reliability, and availability.
+
+
+    - Primary considerations for building applications are:
+
+        1. Latency and throughput
+
+             How long does it take to execute an operation, and how many operations can the system 
+               handle per second?
+
+
+        2. State locality and consistency
+
+             If your system is available in more than one region, how is replication handled?  Is it
+               siloed, eventually replicated, or strongly locked?
+
+
+        3. Availability of the systems
+
+             What are the failure and recovery characteristics of the system?
+
+
+
+- Latency and Throughput
+
+    - When building out requirements for an application, a good place to begin is learning what data you
+        will need to have saved and how you're going to interact with that data.
+
+
+    - There are a number of potential concerns we need to be considering for every data interaction in
+        our design:
+
+        1. Race Conditions
+
+             For example, if 2 clients update the same row at the same time, who wins?  There are a few
+               ways to address this, including:
+
+               - Last One Wins = It doesn't matter who wins, they randomly overwrite each other
+
+               - Transactional Locking = There is a lock at the data-store level or at the server level
+                                           before mutation is allowed.
+
+
+        2. Asynchronous vs Synchronous Operations
+
+             In systems that reqire very low latency, it might be unrealistic to save in real time.  There
+               might be a desire to have state in server or client memory and persist to the final
+               store asynchronously.  
+
+             There is a speed vs truth tradeoff.  With an asynchronous model, there is a short window 
+               during which there is a chance for data loss.  You need to evaluate how important that is
+               compared to latency.
+
+
+        3. Performance Consistency
+
+            Does the tested performance hold?  What if the insertion order changes?  Will the performance
+              change as data scales?  Does performance change as the storage solution grows?  How will
+              performance be affected by maintenance work?
+
