@@ -487,3 +487,123 @@ CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
                bulding logic into any custom code you implement as part of your pipeline.
 
              Because this can be complex, its best to use existing solutions that provide this.
+
+
+
+- Risk Management for Data Delivery
+
+    - Data delivery promises can be risky.  We want to offer a system that gives users everything they
+        want, but in the real world guarantees will fail when something goes wrong.
+
+
+    - The first way to deal with this risk is to have a clean architecture that's shared with stakeholders
+        in order to solicit input that might help ensure stability.  Also, having adequate metrics and
+        logging is important to validate that the implementation has met the requirements.
+
+
+    - The second way to deal with this risk is to have a mechanism that notifies users and the source
+        systems when guarantees are being missed.  This will provide time to adjust or switch to a 
+        backup system.
+
+
+
+- Access Patterns
+
+    - It's important to call out the types of access and requirements we should plan for when defining
+        our data pipeline.  This can be broken into 2 groupings, access to data, and retention of data.
+
+
+    - These are the types of jobs that will most likely come up as priorities:
+
+        1. Batch jobs that do large scans and aggregations
+
+        2. Streaming jobs that do large scans
+
+        3. Point data requests (ie random access)
+
+        4. Search queries
+
+
+
+- Access Pattern: Batch Jobs with Large Scans
+
+    - Batch jobs that scan large blocks of data are core workloads of data research and analytics.
+        Here are some typical workloads that fit into this category with real-world examples for a
+        supermarket chain.
+
+        A. Analytical SQL
+
+             This might entail using SQL to do rollups of which items are selling by zip code and date.
+             It would be very common that reports like this would run daily and be visible to 
+             leadership within the company.
+
+
+        B. Sessionization
+
+             Using SQL or tools like Apache Spark, we might want to sessionize the buying habits of our
+               customers.  For example, we could better predict their individual shopping needs and
+               patterns and be alerted to churn risks.
+
+
+        C. Model Training
+
+             A use case for machine learning in our supermarket example is a recommendation solution
+               that would look at the shopping habits of our customers and provide suggestions for
+               items based on customers' known preferences.
+
+
+        D. Scenario Predictions Evaluation
+
+             In the supermarket use case, we need to define a strategy for deciding how to order the
+               items to fill shelves in our stores.  We can use historical data to know whether our
+               purchasing model is effective.
+
+
+
+- Access Patterns: Streaming Jobs with Large Scans
+
+    - There are 2 main differences between batch and streaming workloads: the time between execution
+        of the job, and the idea of progressive workloads.  
+
+        1. With respect to time, streaming jobs are normally thought to be in the range of milliseconds
+             to minutes.  Batch workloads are typically minutes to hours or even days.
+
+        2. The progressive workload is maybe the bigger difference because it is a difference in the output
+             of the job.
+
+
+    - Where the batch processing needs massive storage and massive compute, the streaming component
+        really only needs enough compute, storage, and memory to hold windows in context.
+
+
+    - Here are our 4 types of jobs and how progressiveness affacts them:
+
+        A. Analytical SQL
+
+             With streaming jobs, our rollups and reports will update at smaller intervals like seconds or
+               minutes, allowing for visibility into near-real-time changes for faster reaction time.
+               Additionally, ideally the processing expense will not be that much bigger than batch
+               because we are working on only the newly added data and not reprocessing past data.
+
+
+        B. Sessionization
+
+             As with the rollups, sessionization in streaming jobs also happens in smaller intervals,
+               allowing for more real-time actionable results.  In our supermarket example, maybe we are
+               using sessionization to analyze the items customers put into our carts and predict what
+               they are making for dinner.
+
+
+        C. Model Training
+
+             Not all models lend themselves to real-time training.  However, the trained models might be
+               ideal for real-time execution to make real-time actionable calls in our business.
+
+
+        D. Scenario Prediction Evaluation
+
+             Additionally, now that we are making real-time calls with technology, we need a real-time
+               way to evaluate those decisions to power humans to know whether corrections need to be
+               made.  As we move to more automation in terms of decision making, we need to match that
+               with real-time evaluation.
+
