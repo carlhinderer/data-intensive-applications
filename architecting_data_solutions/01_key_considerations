@@ -975,3 +975,85 @@ CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
                The locking can be implemented in the client (every client must obtain a lock to change
                  the record), at the datacenter (all mutations have to go through a given datacenter
                  first), or at the record level (using a quorum).
+
+
+
+- Availability
+
+    - Multiple things can affect the uptime of your systems, including:
+
+        1. Human errors
+
+             This can be a bad configuration change, a deployment of a wrong version of code, etc.
+
+
+        2. Upgrades
+
+             Some upgrades will require the system to be restarted.  Even in the case of rolling restarts,
+               there are parts of the system that need to be unavailable for some period.
+
+
+        3. Failures
+
+             Hardware failures are inevitable, regardless of whether you're running systems on premises
+               or in the cloud.
+
+
+        4. Attacks
+
+             Malicious attacks are also something for which you must plan, given that they have the
+               potential to affect the availability of your systems.
+
+
+    - You'll need to be able to define the failure and recovery scenarios that are acceptable for your
+        given SLAs.  
+
+
+    - These are examples of failure points and recovery plans:
+
+        1. Server Failover
+
+             In case of an active server failing, you need to be able to failover to another server.  
+               If your state is at the datacenter, a single server failure should have little or no
+               impact.
+
+
+        2. Nonreplicated Cache Failover
+
+             There are some designs for which a cache is populated with a partition of the state needed
+               to support your use case.  When that cache is destroyed because of a failure, the data
+               might be persistent in other stores.  However, it takes time to restore that cache.
+
+
+        3. Eventually Replicated Datacenter Failover
+
+             Eventual replication is a common way to do replication across a WAN.  In case of failure,
+               requests can switch to different datacenters and continue operating.  
+
+             However, there are 2 main problems with multidatacenter failover.  First, you have a strong
+               chance of losing data that is about to be in flight.  This window will hopefully be small.
+               Second, you need to determine how to manage writes (ie choosing a leader that manages
+               writes or just accepting writes to any datacenter).
+
+
+    - A good strategy is to intentionally introduce failure into your system using something like
+        Netflix's ChaosMonkey.  The results of these failure tests should be used to define the impact,
+        recovery plans, and steps to make the failure less impactful in the future.
+
+
+
+- Application Development Team Makeup
+
+    The following types of resources will be part of your application development team:
+
+      1. Site Reliability Engineers (SREs)
+
+           These are engineers who are dedicated to ensuring the reliability and scalability of 
+             applications deployed to production.  These resources will be critical to the success of
+             the deployment of your applications.
+
+
+      2. Database Engineers
+
+           These probably won't be traditional database developers and architects, but rather people
+             who have a deep understanding of modern distributed data storage and processing systems.
