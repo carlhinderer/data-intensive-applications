@@ -607,3 +607,67 @@ CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
                made.  As we move to more automation in terms of decision making, we need to match that
                with real-time evaluation.
 
+
+
+- Access Patterns: Point Requests
+
+    - The idea with point requests is that we want to fetch a specific record or data point very fast
+        and with high concurrency.
+
+
+    - For instance, we may want to:
+
+        1. Look up the current items in stock for a given store
+
+        2. Look up the current location of items being shipped to your store
+
+        3. Look up the complete supply chain for items in your store
+
+        4. Look up events over time and be able to scan forward and backward in time to investigate
+             how those events affect things like sales
+
+
+
+- Access Patterns: Searchable Access
+
+    - The last pattern that is very common is searchable access to data.  In this use case, access 
+        patterns need to be fast while also allowing for flexibility in queries.  
+
+
+    - In our supermarket example, you might want to learn what types of vegetables are in stock or
+        look at all the shipments from a given farm since there was a contamination.
+
+
+
+- Pipeline and Staging Team Makeup
+
+    - The following are some job roles to consider:
+
+        1. Service and Support Engineers
+
+             These are engineers that are tasked with working with users, including stakeholders of
+               source data systems, users accessing data, etc.  They are trained to optimally use the
+               system, look for good use cases, work with the team to address user issues, and help
+               users be successful.
+
+
+        2. System Engineers and Administrators
+
+             These are engineers obsessed with uptime, latency, efficiency, failure, and data integrity.
+               They don't need to care much about the real use cases for the system.  They focus on the
+               reliability of the system and its performance.
+
+
+        3. Data Engineers
+
+             These are engineers who know the data and the types of storage systems within the system.
+               Their main job is to ensure that the data offerings are being used correctly and
+               that the appropriate big data solutions are being used for the right thing.  They are
+               experts in data storage and data processing.
+
+
+        4. Data Architects
+
+             These are the experts in data modeling who can define the structures that define how data
+               in the system should be structured.  In some cases, this role may be assumed by the 
+               data engineers.
