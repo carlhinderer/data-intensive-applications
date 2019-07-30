@@ -768,3 +768,62 @@ CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
              You want to be seen as a collaborator, not someone who is trying to find shortcomings in an 
                organization.  Work closely with the stakeholders to gain trust.
 
+
+
+- Implementing and Operationalizing Solutions
+
+    - Now that we've identified problems and explored possible solutions, we're ready to move on to 
+        implementing these solutions.  While keeping in mind the original problem we're trying to solve,
+        we also need ot remain flexible and adapt to new information.
+
+
+    - We want to build a robust solution.  A common trap is to build out systems that only solve a 
+        single problem.  A better approach is to provide a platform for solving multiple problems.
+
+      On the other hand, if you try to build a system that solves every problem, you might end up with
+        a system that's not well suited to solve any problem.  It's always good to start small and make
+        sure you have a clear understanding of the business requirements.
+
+
+    - Another common trap is trusing the same people who find or solve problems to operationalize the
+        solutions, even though these activities require completely different skill sets.  You will want
+        a good pipeline and good communication between these groups.
+
+
+
+- Data Processing and Analytics Team Makeup
+
+    - Unlike the pipeline and staging teams, the teams that can successfully use data to provide value
+        need to be more focused on problem discovery, working across teams, and finding paths to solutions.
+        This means we need a different mix of people:
+
+        1. Problem Seekers
+
+             These are people who earn trust with different groups in your company and are good at
+               identifying and quantifying problems.  They are treasure hunters who work with 
+               stakeholders to find problems whose solutions will have a high impact.  They can be
+               project managers, product managers, technical leads, or even developers and analysts.
+
+
+        2. Architects
+
+             A requirement for successful problem-solving is to pick not only the correct problems to 
+               solve, but also the correct order to solve them in.  We want to pick the problems with
+               the least effort to solve that include reusable parts.
+
+
+        3. The Brains
+
+             These are the data scientists and analysts who will help come up with solutions.
+
+
+        4. The Engineers
+
+             You'll need a group of engineers who know how to work with all of the aformentioned 
+               parties and how to take their work and productionize it.
+
+
+        5. Solution Communication Experts
+
+             Communication experts can evangelize the solutions so that they get to reach their full
+               potential.  These are usually project managers, product managers, or technical leads.
