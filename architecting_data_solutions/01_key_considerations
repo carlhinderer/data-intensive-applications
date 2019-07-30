@@ -671,3 +671,100 @@ CHAPTER 1 - KEY PROJECT TYPES AND CONSIDERATIONS
              These are the experts in data modeling who can define the structures that define how data
                in the system should be structured.  In some cases, this role may be assumed by the 
                data engineers.
+
+
+
+- Project Type #2: Data Processing and Analysis
+
+    - These are the data project for which we use the data populated by the data pipeline and staging
+        projects and then transform and analyze the data to derive value.  
+
+
+    - We focus on these items when we're evaluating this use case:
+
+        1. Defining the problems we're trying to solve
+
+        2. Implementing and operationalizing the processing and analysis to solve the problems we've
+             identified
+
+      In other words, what do we want to do, how do we get there, how do we make it repeatable, and how
+        do we quantify its value when we get there?
+
+
+
+- Defining the Problems to be Solved
+
+    - In many cases, the business will already know the questions that need to be answered to provide 
+        value.  Often, though, determining the appropriate questions to ask and which are the correct
+        problems to solve can be a challenge.
+
+      We want to ask what will make an impact to our business and what can be made actionable.  
+        Determining the answers usually involves talking to stakeholders.  These are some good basic
+        questions to ask:
+
+        1. What are the most important things to capture in terms of trackable metrics?
+
+        2. What are things that affect customer engagement?
+
+        3. Is there a gap in the company's offerings?
+
+        4. Are there any active pain points?
+
+
+    - A good next step is to try to further define our objectives in solving the problem.  This will
+        generally mean defining specific metrics, numbers, and visualizations so that we can help
+        evaluate approaches to solving the problem.  
+
+      Let's apply this idea to our supermarket example.  Suppose that our problem is a concern that
+        shelves are not fully stocked with the proper products.  We could create visualizations to help
+        illustrate this, such as:
+
+        1. Products stocked over time
+
+             We could use a time-based chart that shows the average, max, min, top 10%, and bottom 10%
+               of inventory for each product.
+
+
+        2. Products out of stock
+
+             We could use a time-based chart illustrating times when each item is unstocked.
+
+
+        3. Substitute purchase patterns
+
+             During times when a product is out of stock, do customers select a different product?
+
+
+        4. Delivery supply chain
+
+             For products that were understocked, was the problem caused by delivery delays?
+
+
+        5. Region or store variations
+
+             Are there differences in stock levels across regions or stores?
+
+
+        6. Customer impact
+
+             For customers who are normal purchasers of the understocked items, do we see a change in 
+               spending between time periods when inventory levels are acceptable and when the item is
+               out of stock?
+
+
+
+- Risk Management for Problem Definition
+
+    - Here are 2 things that can help manage risk in problem definition:
+
+        1. Get many viewpoints
+
+             Make sure you talk to as many people as possible to try and understand the problem from 
+               all angles.
+
+
+        2. Build trust
+
+             You want to be seen as a collaborator, not someone who is trying to find shortcomings in an 
+               organization.  Work closely with the stakeholders to gain trust.
+
