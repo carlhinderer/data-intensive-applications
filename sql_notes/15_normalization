@@ -70,6 +70,11 @@ CHAPTER 15 - NORMALIZATION
 
 
 
+- Functional Dependencies
+
+    - A functional dependency, denoted X -> Y, 
+
+
 - 1NF
 
     - The domain of an attribute must include only atomic values, and the value of any attribute must
@@ -187,3 +192,10 @@ CHAPTER 15 - NORMALIZATION
         ----------------------------------------
         Dnumber(PK)     Dname     Dmgr_ssn
         ----------------------------------------
+
+
+
+- BNCF
+
+    - A relation schema R is in BCNF if whenever a nontrivial functional dependency X->A holds in R,
+        then X is a superkey of R.

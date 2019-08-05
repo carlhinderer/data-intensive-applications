@@ -2,18 +2,6 @@
 CHAPTER 3 - SQL BASICS
 ----------------------------------------------------
 
-- Reasons for using RDBMS
-
-    1. Controlling redundancy
-    2. Restricting access
-    3. Persistent storage
-    4. Efficient querying
-    5. Backup and recovery
-    6. Multiple user interfaces
-    7. Complex relationships among data
-    8. Enforcing integrity constraints
-    9. Enforcing rules
-
 
 
 - Relational Model Terminology
