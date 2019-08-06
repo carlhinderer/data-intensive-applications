@@ -62,6 +62,51 @@ CHAPTER 4 - BASIC SQL
 
 
 
+- SQL Data Types
+
+    - Numeric Types
+
+        INTEGER or INT
+        SMALLINT
+
+        FLOAT or REAL
+        DOUBLE PRECISION
+
+        DECIMAL(i,j) or DEC(i,j) or NUMERIC(i,j)
+
+
+    - Character types
+
+        CHAR(n) or CHARACTER(n)
+        VARCHAR(n)
+
+
+    - Bit Types
+
+        BIT(n)
+        BIT VARYING(n)
+        BLOB
+
+
+    - Boolean Type
+
+        BOOL
+
+
+    - Datetime Types
+
+        DATE [WITH TIME ZONE]
+        TIME [WITH TIME ZONE]
+        TIMESTAMP
+        INTERVAL
+
+
+    - User-Defined Types
+
+        CREATE DOMAIN SSN_TYPE AS CHAR(9);
+
+
+
 - Naming Constraints
 
     Constraints can have a name for convenience, but they don't have to.
@@ -167,3 +212,60 @@ CHAPTER 4 - BASIC SQL
     FROM EMPLOYEE, DEPARTMENT
     WHERE DEPARTMENT.Dname = 'Research'
       AND DEPARTMENT.Dnumber = EMPLOYEE.Dno;
+
+
+
+- Query Example #5 - Asterisk Queries
+
+    # Get all attributes for employees in dept 5
+    SELECT *
+    FROM EMPLOYEE
+    WHERE Dno=5;
+
+
+    # Get all attributes of employees and their departments for the Research dept
+    SELECT *
+    FROM EMPLOYEE, DEPARTMENT
+    WHERE Dname = 'Research' AND Dno = Dnumber;
+
+
+    # Get the cross product of the employee and department relations
+    SELECT *
+    FROM EMPLOYEE, DEPARTMENT;
+
+
+
+- Query Example #6 - Distinct Values
+
+    # Get all the unique salaries for employees
+    SELECT DISTINCT Salary
+    FROM EMPLOYEE;
+
+
+
+- Query Example #7 - UNION Operation
+
+    # Get all the project numbers for projects that involve an employee whose last name is 'Smith',
+    #   either as a worker or as a manager of the department that controls the project
+
+      (SELECT DISTINCT Pnumber
+       FROM PROJECT, DEPARTMENT, EMPLOYEE,
+       WHERE Dnum = Dnumber AND Mgr_ssn = Ssn AND Lname = 'Smith')
+    UNION
+      (SELECT DISTINCT Pnumber
+       FROM PROJECT, WORKS_ON, EMPLOYEE
+       WHERE Pnumber = Pno AND Essn = Ssn AND Lname = 'Smith')
+
+
+
+- List of SQL Set Operations
+
+    # Standard set operations
+    UNION         Set union
+    EXCEPT        Set difference
+    INTERSECT     Set intersection
+
+    # Multiset operations (don't remove duplicates)
+    UNION ALL
+    EXCEPT ALL
+    INTERSECT ALL
