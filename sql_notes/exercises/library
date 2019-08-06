@@ -1,0 +1,26 @@
+----------------------------------------------------
+LIBRARY EXAMPLE
+----------------------------------------------------
+
+- Library Schema
+
+    BOOK [Book_id, Title, Publisher_name]
+          -------
+
+    BOOK_AUTHORS [Book_id, Author_name]
+                  -------
+
+    PUBLISHER [Name, Address, Phone]
+               ----
+
+    BOOK_COPIES [Book_id, Branch_id, No_of_copies]
+                 -------  ---------
+
+    BOOK_LOANS [Book_id, Branch_id, Card_no, Date_out, Due_date]
+                -------  ---------  -------
+
+    LIBRARY_BRANCH [Branch_id, Branch_name, Address]
+                    ---------
+
+    BORROWER [Card_no, Name, Address, Phone]
+              -------
