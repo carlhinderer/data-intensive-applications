@@ -269,3 +269,101 @@ CHAPTER 4 - BASIC SQL
     UNION ALL
     EXCEPT ALL
     INTERSECT ALL
+
+
+
+- Query Example # 8 - Pattern Matching
+
+    # Get all employees whose address is in Houston, TX
+    #   (% replaces 0 or more characters)
+
+    SELECT Fname, Lname
+    FROM EMPLOYEE
+    WHERE Address LIKE '%Houston, TX%'
+
+
+    # Get all employees who were born in the 1950s
+    #   (_ replaces a single character)
+
+    SELECT Fname, Lname
+    FROM EMPLOYEE
+    WHERE Bdate LIKE '__5_______'
+
+
+
+- Query Example # 9 - Arithmetic in Queries
+
+    # Show the resulting salaries if everyone on the 'ProductX' project is given a 10% raise
+    SELECT E.Fname, E.Lname, 1.1 * E.Salary AS Increased_sal
+    FROM EMPLOYEE AS E, WORKS_ON AS W, PROJECT AS P
+    WHERE E.Ssn = W.Essn AND W.Pno = P.Pnumber AND P.Pname = 'ProductX'
+
+
+
+- Query Example #10 - The BETWEEN Operator
+
+    # Retrieve all employees in Dept 5 that make between $30K and $40K
+    SELECT *
+    FROM EMPLOYEE
+    WHERE (Salary BETWEEN 30000 AND 400000) AND Dno = 5
+
+
+
+- Query Example #11 - Ordering Query Results
+
+    # Retrieve all the employees and the projects they are working on, ordered by department,
+    #   and ordered by last, then first name within each department
+
+    SELECT D.Dname, E.Lname, E.Fname, P.Pname
+    FROM DEPARTMENT D, EMPLOYEE E, WORKS_ON W, PROJECT P
+    WHERE D.Dnumber = E.Dno AND E.Ssn = W.Essn AND W.Pno = P.Pnumber
+    ORDER BY D.Dname, E.Lname, E.Fname
+
+    # Default ordering is ASC, can also use DESC
+
+
+
+- The INSERT Command
+
+    # Insert with all attributes specified
+    INSERT INTO EMPLOYEE
+    VALUES ('Richard', 'K', 'Marini', '222334444', '1960-01-01', '123 Main St, Katy, TX', 
+            'M', 37000, '222334444', 4);
+
+
+    # Insert with specific attributes
+    INSERT INTO EMPLOYEE (Fname, Lname, Dno, Ssn)
+    VALUES ('Richard', 'Marini', 4, '222334444');
+
+
+    Note that all key and referential integrity must be satisfied, or the INSERT will not succeed.
+
+
+    # Insert using the result of a query
+    INSERT INTO WORKS_ON_INFO (Emp_name, Proj_name, Hours_per_week)
+    SELECT E.Lname, P.Pname, W.Hours
+    FROM PROJECT P, WORKS_ON W, EMPLOYEE E
+    WHERE P.Pnumber = W.Pno AND W.Essn = E.Ssn;
+
+
+
+- The DELETE Command
+
+    # Delete tuple
+    DELETE FROM EMPLOYEE
+    WHERE Lname = 'Brown';
+
+
+
+- The UPDATE Command
+
+    # Update tuple
+    UPDATE PROJECT
+    SET Plocation = 'Bellaire', Dnum = 5
+    WHERE Pnumber = 10;
+
+
+    # Update based on previous column value
+    UPDATE PROJECT
+    SET Salary = Salary * 1.1
+    WHERE Dno = 5;
