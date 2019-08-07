@@ -1,0 +1,59 @@
+----------------------------------------------------
+CHAPTER 6 - RELATIONAL ALGEBRA AND CALCULUS
+----------------------------------------------------
+
+- Formal Languages
+
+    - There are 2 formal languages for the relational model: relational algebra and relational calculus.
+        SQL is the practical language for the relational model.  It is based on these earlier formal
+        languages.
+
+
+    - Relational Algebra provides a basic set of operations for retrieving requests from a relational
+        model.  It is used to implement, process, and optimize queries in a RDBMS.  It describes the
+        sequence of operations used to retrieve a result.
+
+
+    - Relational Calculus provides a higher-level declarative language for specifying relational queries.
+        There is no order of operations, just what the result should contain.
+
+
+
+- The SELECT Operation
+
+    We can think of selection as a filtering operation that only keeps the tuples that specify a given
+      condition.
+
+
+      SELECT[Dno=4] (EMPLOYEE)
+
+      SELECT[Salary > 30000] (EMPLOYEE)
+
+
+
+- The PROJECT Operation
+
+    Whereas selection filters tuples, projection filters attributes.  The PROJECT operation also removes
+      any duplicate tuples, producing a valid set.
+
+
+      PROJECT[Lname, Fname, Salary] (EMPLOYEE)
+
+
+
+- Combining SELECT and PROJECT
+
+    For most queries, we need to apply several relational operations, one after another.
+
+
+      PROJECT[Fname, Lname, Salary] (SELECT[Dno = 5] (EMPLOYEE))
+
+
+
+- The RENAME Operation
+
+    We can also rename any relation for convenience.
+
+      TEMP <- SELECT[Dno = 5] (EMPLOYEE)
+
+      PROJECT[Fname, Lname, Salary] (TEMP)
