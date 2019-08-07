@@ -285,4 +285,34 @@ CHAPTER 5 - MORE SQL
       2. View Materialization = Create a temporary view table to store the results.  In this case, we
                                   need a strategy to update the view when the underlying tables are
                                   updated.
-                                  
+
+
+
+- The DROP Command
+
+    # Drop an entire schema and all its elements
+    DROP SCHEMA COMPANY CASCADE;
+
+    # Drop an entire table and all the elements that reference it
+    DROP TABLE DEPENDENT CASCADE;
+
+
+
+- The ALTER Command
+
+    # Add a column to a table
+    ALTER TABLE COMPANY.EMPLOYEE ADD COLUMN Job VARCHAR(12);
+
+    # Drop a column from a table and the elements that reference it
+    ALTER TABLE COMPANY.EMPLOYEE DROP COLUMN Job CASCADE;
+
+
+    # Set a default for a column
+    ALTER TABLE COMPANY.DEPARTMENT ALTER COLUMN Mgr_ssn SET DEFAULT '222334444';
+
+    # Drop a default for a column
+    ALTER TABLE COMPANY.DEPARTMENT ALTER COLUMN Mgr_ssn DROP DEFAULT;
+
+
+    # Drop a foreign key constraint
+    ALTER TABLE COMPANY.EMPLOYEE DROP CONSTRAINT EMPSUPERFK CASCADE;
