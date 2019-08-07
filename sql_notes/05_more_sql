@@ -97,7 +97,7 @@ CHAPTER 5 - MORE SQL
 
     # Get the name of each employee who works on all projects controlled by Dept 5
     #   Note: EXCEPT will cause query to return of results of 1st subquery MINUS results of 2nd subquery
-    
+
     SELECT Fname, Lname
     FROM EMPLOYEE
     WHERE NOT EXISTS (( SELECT Pnumber
@@ -107,3 +107,67 @@ CHAPTER 5 - MORE SQL
                             SELECT Pno
                             FROM WORKS_ON
                             WHERE Ssn = Essn) )
+
+
+
+- Renaming Attributes
+
+    SELECT E.Lname AS Employee_name, S.Lname AS Supervisor_name
+    FROM EMPLOYEE AS E, EMPLOYEE AS S
+    WHERE E.Super_ssn = S.Ssn
+
+
+
+- Joins
+
+    - Joins were incorporated into SQL to allow users to specify a table resulting from a join operation
+        in the FROM clause, rather than the WHERE clause.  The default join type is an INNER JOIN, where
+        a tuple is included in the result only if a matching tuple exists in the other relation.
+
+        # Get all employees in the Research department
+        SELECT Fname, Lname, Address
+        FROM EMPLOYEE 
+             JOIN DEPARTMENT ON Dno = Dnumber
+        WHERE Dname = 'Research'
+
+
+    - With a NATURAL JOIN, no join condition is specified.  An implicit EQUIJOIN condition for each
+        pair of attributes with the same name in the 2 relations is created.
+
+        SELECT Fname, Lname, Address
+        FROM EMPLOYEE
+             NATURAL JOIN DEPARTMENT AS DEPT (Dname, Dno, Mssn, Msdate)
+        WHERE Dname = 'Research'
+
+
+    - With a LEFT OUTER JOIN, all tuples from the left relation are included, whether they have a 
+        matching tuple in the right relation or not.  If they do not, NULL is returned for the attributes
+        from the right relation.
+
+        # Return all employees, whether they have a supervisor or not
+        SELECT E.Lname AS Employee_name,
+               S.Lname AS Supervisor_name
+        FROM EMPLOYEE AS E 
+             LEFT OUTER JOIN EMPLOYEE AS S ON E.Super_ssn = S.Ssn
+
+
+    - With a RIGHT OUTER JOIN, all tuples from the right relation are included, whether they have a 
+        matching tuple in the left relation or not.  If it does not, NULL is returned for the attributes
+        from the left relation.
+
+
+    - With a FULL OUTER JOIN, all tuples from both relations are included.  They have NULL for the 
+        attributes they don't have a matching tuple for on either the left or right side.
+
+
+    - A CROSS JOIN returns the full Cartesian product of the 2 relations.  All possible combinations
+        of tuples from the relations are returned.
+
+
+    - Joins can also be multiway, with 3 or more relations included.
+
+        SELECT Pnumber, Dnum, Lname, Address, Bdate
+        FROM PROJECT
+             JOIN DEPARTMENT ON Dnum = Dnumber
+             JOIN EMPLOYEE ON Mgr_ssn = Ssn
+        WHERE Plocation = 'Stafford'
