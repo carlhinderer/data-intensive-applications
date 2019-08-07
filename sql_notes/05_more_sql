@@ -1,0 +1,109 @@
+----------------------------------------------------
+CHAPTER 5 - MORE SQL
+----------------------------------------------------
+
+- Checking for NULL in Queries
+
+    # Get the list of employees that don't have supervisors
+    SELECT Fname, Lname
+    FROM EMPLOYEE
+    WHERE Super_ssn IS NULL
+
+
+
+- Nested Queries with the IN Function
+
+    # The IN operator compares a value with a set and evaluates to TRUE if the value is in the set
+    SELECT DISTINCT Pnumber
+    FROM PROJECT
+    WHERE Pnumber IN (
+        SELECT Pnumber
+        FROM PROJECT, DEPARTMENT, EMPLOYEE
+        WHERE Dnum = Dnumber AND Mgr_ssn = Ssn AND Lname = 'Smith')
+
+
+    # IN operator with a tuple
+    SELECT DISTINCT Essn
+    FROM WORKS_ON
+    WHERE (Pno, Hours) IN (SELECT Pno, Hours
+                           FROM WORKS_ON
+                           WHERE Essn = '222334444')
+
+
+
+- The ALL Function
+
+    # Return employees whose salary is greater than all employees in Dept 5
+    SELECT Lname, Fname
+    FROM EMPLOYEE
+    WHERE Salary > ALL (SELECT Salary
+                        FROM EMPLOYEE
+                        WHERE Dno = 5)
+
+
+
+- The EXISTS Function
+
+    The EXISTS function is used to check whether the results of a nested query are empty.
+
+
+    # Get all employees who have dependents with the same name and sex as the employee
+    SELECT E.Fname, E.Lname
+    FROM EMPLOYEE AS E, DEPENDENT AS D
+    WHERE E.Ssn = D.Essn AND E.Sex = D.Sex AND E.Fname = D.Dependent_name
+
+
+    # The same query using IN
+    SELECT E.Fname, E.Lname
+    FROM EMPLOYEE AS E
+    WHERE E.Ssn IN (SELECT Essn
+                    FROM DEPENDENT AS D
+                    WHERE E.Fname = D.Dependent_name AND E.Sex = D.Sex)
+
+
+    # The same query using EXISTS
+    SELECT E.Fname, E.Lname
+    FROM EMPLOYEE AS E
+    WHERE EXISTS (SELECT *
+                  FROM DEPENDENT
+                  WHERE Ssn = Essn)
+
+
+
+- Using NOT EXISTS
+
+    # Get names of employees who have no dependents
+    SELECT Fname, Lname
+    FROM EMPLOYEE
+    WHERE NOT EXISTS (SELECT *
+                      FROM DEPENDENT
+                      WHERE Ssn = Essn)
+
+
+
+- More EXISTS and NOT EXISTS Examples
+
+    # List the names of managers who have at least one dependent
+    SELECT Fname, Lname
+    FROM EMPLOYEE
+    WHERE EXISTS (SELECT *
+                  FROM DEPENDENT
+                  WHERE Ssn = Essn)
+          AND
+          EXISTS (SELECT *
+                  FROM DEPARTMENT
+                  WHERE Ssn = Mgr_ssn)
+
+
+    # Get the name of each employee who works on all projects controlled by Dept 5
+    #   Note: EXCEPT will cause query to return of results of 1st subquery MINUS results of 2nd subquery
+    
+    SELECT Fname, Lname
+    FROM EMPLOYEE
+    WHERE NOT EXISTS (( SELECT Pnumber
+                        FROM PROJECT
+                        WHERE Dnum = 5)
+                        EXCEPT (
+                            SELECT Pno
+                            FROM WORKS_ON
+                            WHERE Ssn = Essn) )
