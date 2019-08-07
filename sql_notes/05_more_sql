@@ -7,7 +7,7 @@ CHAPTER 5 - MORE SQL
     # Get the list of employees that don't have supervisors
     SELECT Fname, Lname
     FROM EMPLOYEE
-    WHERE Super_ssn IS NULL
+    WHERE Super_ssn IS NULL;
 
 
 
@@ -19,7 +19,7 @@ CHAPTER 5 - MORE SQL
     WHERE Pnumber IN (
         SELECT Pnumber
         FROM PROJECT, DEPARTMENT, EMPLOYEE
-        WHERE Dnum = Dnumber AND Mgr_ssn = Ssn AND Lname = 'Smith')
+        WHERE Dnum = Dnumber AND Mgr_ssn = Ssn AND Lname = 'Smith');
 
 
     # IN operator with a tuple
@@ -27,7 +27,7 @@ CHAPTER 5 - MORE SQL
     FROM WORKS_ON
     WHERE (Pno, Hours) IN (SELECT Pno, Hours
                            FROM WORKS_ON
-                           WHERE Essn = '222334444')
+                           WHERE Essn = '222334444');
 
 
 
@@ -38,7 +38,7 @@ CHAPTER 5 - MORE SQL
     FROM EMPLOYEE
     WHERE Salary > ALL (SELECT Salary
                         FROM EMPLOYEE
-                        WHERE Dno = 5)
+                        WHERE Dno = 5);
 
 
 
@@ -50,7 +50,7 @@ CHAPTER 5 - MORE SQL
     # Get all employees who have dependents with the same name and sex as the employee
     SELECT E.Fname, E.Lname
     FROM EMPLOYEE AS E, DEPENDENT AS D
-    WHERE E.Ssn = D.Essn AND E.Sex = D.Sex AND E.Fname = D.Dependent_name
+    WHERE E.Ssn = D.Essn AND E.Sex = D.Sex AND E.Fname = D.Dependent_name;
 
 
     # The same query using IN
@@ -58,7 +58,7 @@ CHAPTER 5 - MORE SQL
     FROM EMPLOYEE AS E
     WHERE E.Ssn IN (SELECT Essn
                     FROM DEPENDENT AS D
-                    WHERE E.Fname = D.Dependent_name AND E.Sex = D.Sex)
+                    WHERE E.Fname = D.Dependent_name AND E.Sex = D.Sex);
 
 
     # The same query using EXISTS
@@ -66,7 +66,7 @@ CHAPTER 5 - MORE SQL
     FROM EMPLOYEE AS E
     WHERE EXISTS (SELECT *
                   FROM DEPENDENT
-                  WHERE Ssn = Essn)
+                  WHERE Ssn = Essn);
 
 
 
@@ -77,7 +77,7 @@ CHAPTER 5 - MORE SQL
     FROM EMPLOYEE
     WHERE NOT EXISTS (SELECT *
                       FROM DEPENDENT
-                      WHERE Ssn = Essn)
+                      WHERE Ssn = Essn);
 
 
 
@@ -92,7 +92,7 @@ CHAPTER 5 - MORE SQL
           AND
           EXISTS (SELECT *
                   FROM DEPARTMENT
-                  WHERE Ssn = Mgr_ssn)
+                  WHERE Ssn = Mgr_ssn);
 
 
     # Get the name of each employee who works on all projects controlled by Dept 5
@@ -106,7 +106,7 @@ CHAPTER 5 - MORE SQL
                         EXCEPT (
                             SELECT Pno
                             FROM WORKS_ON
-                            WHERE Ssn = Essn) )
+                            WHERE Ssn = Essn) );
 
 
 
@@ -114,7 +114,7 @@ CHAPTER 5 - MORE SQL
 
     SELECT E.Lname AS Employee_name, S.Lname AS Supervisor_name
     FROM EMPLOYEE AS E, EMPLOYEE AS S
-    WHERE E.Super_ssn = S.Ssn
+    WHERE E.Super_ssn = S.Ssn;
 
 
 
@@ -128,7 +128,7 @@ CHAPTER 5 - MORE SQL
         SELECT Fname, Lname, Address
         FROM EMPLOYEE 
              JOIN DEPARTMENT ON Dno = Dnumber
-        WHERE Dname = 'Research'
+        WHERE Dname = 'Research';
 
 
     - With a NATURAL JOIN, no join condition is specified.  An implicit EQUIJOIN condition for each
@@ -137,7 +137,7 @@ CHAPTER 5 - MORE SQL
         SELECT Fname, Lname, Address
         FROM EMPLOYEE
              NATURAL JOIN DEPARTMENT AS DEPT (Dname, Dno, Mssn, Msdate)
-        WHERE Dname = 'Research'
+        WHERE Dname = 'Research';
 
 
     - With a LEFT OUTER JOIN, all tuples from the left relation are included, whether they have a 
@@ -148,7 +148,7 @@ CHAPTER 5 - MORE SQL
         SELECT E.Lname AS Employee_name,
                S.Lname AS Supervisor_name
         FROM EMPLOYEE AS E 
-             LEFT OUTER JOIN EMPLOYEE AS S ON E.Super_ssn = S.Ssn
+             LEFT OUTER JOIN EMPLOYEE AS S ON E.Super_ssn = S.Ssn;
 
 
     - With a RIGHT OUTER JOIN, all tuples from the right relation are included, whether they have a 
@@ -170,4 +170,56 @@ CHAPTER 5 - MORE SQL
         FROM PROJECT
              JOIN DEPARTMENT ON Dnum = Dnumber
              JOIN EMPLOYEE ON Mgr_ssn = Ssn
-        WHERE Plocation = 'Stafford'
+        WHERE Plocation = 'Stafford';
+
+
+
+- Aggregate Functions
+
+    # Get statistics for employee salaries
+    SELECT SUM(Salary), MAX(Salary), MIN(Salary), AVG(Salary)
+    FROM EMPLOYEE;
+
+
+    # Get the total number of employees in the company
+    SELECT COUNT(*)
+    FROM EMPLOYEE;
+
+
+    # Count the number of distinct employee salaries
+    SELECT COUNT(DISTINCT Salary)
+    FROM EMPLOYEE;
+
+
+
+- The GROUP BY and HAVING Clauses
+
+    - The GROUP BY clause allows us to partition our results into non-overlapping groups of tuples.
+
+        # For each dept, get the dept number, number of employees, and their average salary
+        SELECT Dno, COUNT(*), AVG(Salary)
+        FROM EMPLOYEE
+        GROUP BY Dno;
+
+
+    - If NULLS exist in the grouping attribute, a separate group is created for all tuples with a NULL
+        value in the grouping attribute.
+
+
+    - Joins can be combined with grouping operations.
+
+        # For each project, get the project number, name, and number of employees who work on it
+        SELECT Pnumber, Pname, COUNT(*)
+        FROM PROJECT, WORKS_ON
+        WHERE Pnumber = Pno
+        GROUP BY Pnumber, Pname;
+
+
+    - The HAVING clause is used to filter groups.
+
+        # For each project with > 2 employees, get the project number, name, and number of employees
+        SELECT Pnumber, Pname, COUNT(*)
+        FROM PROJECT, WORKS_ON
+        WHERE Pnumber = Pno
+        GROUP BY Pnumber, Pname
+        HAVING COUNT(*) > 2
