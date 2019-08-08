@@ -47,3 +47,84 @@ CHAPTER 7 - THE ENTITY RELATIONSHIP MODEL
 
       4. We want to keep track of the dependents of each employee for insurance purposes.  We keep each
            employee's first name, sex, birth date, and relationship to the employee.
+
+
+
+- Entities and Attributes
+
+    - An 'entity' is a thing in the real world with an independent existence.
+
+    - Each entity has 'attributes', the properties that describe it.
+
+    - Attributes that are not divisible are 'simple attributes' (aka 'atomic attributes').  A zip code
+        is an example.  'Composite attributes' form a hierarchy.  An address with number, street
+        name, and zip code parts is an example.
+
+    - 'Single-valued attributes' have a single value for a particular entity.  The age of a person is
+        an example.  'Multivalued attributes' may have different numbers of values for an entity.  A
+        person's college degrees is an example.
+
+    - 'Stored attributes' are stored directly in the database.  'Derived attributes' can be derived from
+        information stored in the database.  An example is a person's age from their DOB.
+
+    - Some attributes can have NULL values.  The NULL values arise from two scenarios.  The first is that
+        a value exists, but is unknown.  The second case arises when it is not known whether the value
+        exists.  
+
+    - In general, composite and multivalued attributes can be arbitrarily nested.
+
+
+
+- Entity Types, Entity Sets, Keys, and Domains
+
+    - An 'entity type' defines a collection of entities that have the same attributes.  This is analogous
+        to a table.  The collection of all entities of a particular entity type are called an 'entity set'.
+        This is analogous to the tuples in a table.
+
+    - A 'key value' serves as a uniqueness constraint on attributes.  An entity usually has one or more
+        attributes whose values are distinch for each entity in the entity set.  
+
+    - An entity type with no key is called a 'weak entity type'.
+
+    - Each attribute of an entity type has a 'domain' of values, which specifies the set of values that
+        may be assigned to that attribute for each additional entity.
+
+
+
+- Initial Conceptual Design for COMPANY Database
+
+    DEPARTMENT
+      Name (Key Attribute)
+      Number (Key Attribute)
+      Manager
+      Manager_start_date
+      Locations (Multivalued Attribute)
+
+    PROJECT
+      Name (Key Attribute)
+      Number (Key Attribute)
+      Location
+      Controlling Department
+
+    EMPLOYEE
+      Ssn (Key Attribute)
+      Name
+        Fname
+        Minit
+        Lname
+      Department
+      Birth_date
+      Sex
+      Salary
+      Supervisor
+      Address
+      Works_on (Multivalued Attribute)
+        Project
+        Hours
+
+    DEPENDENT
+      Employee
+      Dependent_name
+      Relationship
+      Birth_date
+      Sex
