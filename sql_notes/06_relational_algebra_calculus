@@ -57,3 +57,56 @@ CHAPTER 6 - RELATIONAL ALGEBRA AND CALCULUS
       TEMP <- SELECT[Dno = 5] (EMPLOYEE)
 
       PROJECT[Fname, Lname, Salary] (TEMP)
+
+
+
+- Set Theory Relational Algebra Operations
+
+    UNION (U)
+    INTERSECTION (^)
+    SET DIFFERENCE aka MINUS (-)
+    CARTESIAN PRODUCT (X)
+
+
+      FEMALE_EMPS <- SELECT[Sex = 'F'] (EMPLOYEE)
+      EMPNAMES <- PROJECT[Fname, Lname, Ssn] (FEMALE_EMPS)
+      EMP_DEPENDENTS <- EMPNAMES X DEPENDENTS
+      ACTUAL_DEPENDENTS <- SELECT[Ssn = Essn] (EMP_DEPENDENTS)
+      RESULTS <- PROJECT[Fname, Lname, Dependent_name] (ACTUAL_DEPENDENTS)
+
+
+
+- The JOIN Operation
+
+    - The JOIN operation is used to combine related tuples from 2 relations into single longer tuples.
+
+        DEPT_MGR <- (DEPARTMENT) JOIN[Mgr_ssn = Ssn] (EMPLOYEE)
+        RESULT <- PROJECT[Dname, Lname, Fname] (DEPT_MGR)
+
+
+    - A Join in which = is the only comparison operator used is called an EQUIJOIN.  If the attributes
+        used to join relations are the same on both sides, we can use a NATURAL JOIN.
+
+        PROJ_DEPT <- (PROJECT) NATURAL JOIN[Dname, Dnum, Mgr_ssn] (DEPARTMENT)
+
+
+
+ - The DIVISION Operation
+
+     - The DIVISION operator (/) is used to find a relation in which the values of one tuple must appear
+         in every tuple in the other relation.
+
+
+     - Suppose we want to retrieve the name of all employees who work on ALL of the projects that
+         'John Smith' works on.
+
+         # First, we get the list of project numbers that John Smith works on
+         SMITH <- SELECT[Fname = 'John' AND Lname = 'Smith'] (EMPLOYEE)
+         SMITH_PNOS <- PROJECT[Pno] ((WORKS_ON) JOIN[Essn = Ssn] (SMITH))
+
+         # Then, we get the employees who work on the projects in SMITH_PNOS
+         SSN_PNOS <- PROJECT[Essn, Pno] (WORKS_ON)
+
+         # Finally, we apply the division operator to get the employees who work on all of the projects
+         SSNS(SSn) <- SSN_PNOS / SMITH_PNOS
+         RESULT <- PROJECT[Fname, Lname] ((SSNS) NATURAL JOIN (EMPLOYEE)
