@@ -110,3 +110,37 @@ CHAPTER 6 - RELATIONAL ALGEBRA AND CALCULUS
          # Finally, we apply the division operator to get the employees who work on all of the projects
          SSNS(SSn) <- SSN_PNOS / SMITH_PNOS
          RESULT <- PROJECT[Fname, Lname] ((SSNS) NATURAL JOIN (EMPLOYEE)
+
+
+
+- Query Example #1
+
+    # Retrieve the name and address of all employees who work for the 'Research' department
+
+    RESEARCH_DEPT <- SELECT[Dname = 'Research'] (DEPARTMENT)
+    RESEARCH_EMPS <- (RESEARCH_DEPT) JOIN[Dnumber = Dno] (EMPLOYEE)
+    RESULT <- PROJECT[Fname, Lname, Address] (RESEARCH_EMPS)
+
+
+
+- Query Example # 2
+
+    # For every project located in 'Stafford', list the project number, the controlling department
+    #   number, the department manager's last name, address, and birth date.
+
+    STAFFORD_PROJS <- SELECT[Plocation = 'Stafford'] (PROJECT)
+    CONTR_DEPTS <- (STAFFORD_PROJS) JOIN[Dnum = Dnumber] (DEPARTMENT)
+    PROJ_DEPT_MGRS <- (CONTR_DEPTS) JOIN[Mgr_ssn = Ssn] (EMPLOYEE)
+    RESULT <- PROJECT[Pnumber, Dnum, Lname, Address, Bdate] (PROJ_DEPT_MGRS)
+
+
+
+- Query Example # 3
+
+    # Find the names of employees who work on all projects controlled by Dept 5
+
+    DEPT_5_PROJ_NUMS <- SELECT[Dnum = 5] (PROJECT)
+    DEPT_5_PROJS <- RENAME[Pno] ( PROJECT[Pnumber] (DEPT_5_PROJ_NUMS) )
+    EMP_PROJS <- RENAME[Ssn, Pno] ( PROJECT[Essn, Pno] (WORKS_ON) )
+    RESULT_EMP_SSNS <- EMP_PROJ / DEPT5_PROJS
+    RESULT <- PROJECT[Lname, Fname] ((RESULT_EMP_SSNS) NATURAL JOIN (EMPLOYEE) )
