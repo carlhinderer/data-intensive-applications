@@ -144,3 +144,18 @@ CHAPTER 6 - RELATIONAL ALGEBRA AND CALCULUS
     EMP_PROJS <- RENAME[Ssn, Pno] ( PROJECT[Essn, Pno] (WORKS_ON) )
     RESULT_EMP_SSNS <- EMP_PROJ / DEPT5_PROJS
     RESULT <- PROJECT[Lname, Fname] ((RESULT_EMP_SSNS) NATURAL JOIN (EMPLOYEE) )
+
+
+
+- Tuple Relational Calculus
+
+    - A relational calculus expression specifies what is to be retrieved, rather than how to retrieve
+        it.  Any expression that can be expressed in relational algebra can also be expressed in 
+        relational calculus, and vice versa.
+
+
+    - Tuple variables specify a range relation with the conditions that apply to them.
+
+        {t | EMPLOYEE(t) AND t.Salary > 50000}
+
+        {t.Fname, t.Lname | EMPLOYEE(t) AND t.Salary > 50000}
