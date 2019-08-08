@@ -91,7 +91,7 @@ CHAPTER 7 - THE ENTITY RELATIONSHIP MODEL
 
 
 
-- Initial Conceptual Design for COMPANY Database
+- Initial Entities for COMPANY Database
 
     DEPARTMENT
       Name (Key Attribute)
@@ -128,3 +128,122 @@ CHAPTER 7 - THE ENTITY RELATIONSHIP MODEL
       Relationship
       Birth_date
       Sex
+
+
+
+- Relationships
+
+    - 'Relationships' are references between entities.  We capture the relationships by representing
+        them as attributes.
+
+        EMPLOYEE <-> WORKS_FOR <-> DEPARTMENT
+
+
+    - The 'degree' of a relationship is the number of participating entity types.  A 'binary' relationship
+        has a degree of 2, and a 'ternary' relationship has a degree of 3.  
+
+
+    - A 'recursive relationship' involves the same entity participating in a relationship more than
+        once.  
+
+        EMPLOYEE <-> SUPERVISES <-> EMPLOYEE
+
+
+    - A 'cardinality ratio' specifies the maximum number of relationship instances that an entity can 
+        participate in.  The possible cardinality ratios are 1:1, 1:N, N:1, and M:N.
+
+        1:1
+        EMPLOYEE <-> MANAGES <-> DEPARTMENT
+
+        M:N
+        EMPLOYEE <-> WORKS_ON <-> PROJECT
+
+
+    - A 'participation constraint' specifies the minimum number of relationship instances that an entity
+        can participate in.  The 2 types of participation constraints are 'total' and 'partial'.  
+
+      For instance, if there is a constraint that every employee must work for a department, then the
+        participation of EMPLOYEE in WORKS_FOR is 'total participation'.  This is aka an 'existence
+        dependency'.
+
+      Since we do not expect every employee to manage a department, the participation of EMPLOYEE in 
+        MANAGES is 'partial participation'.
+
+
+    - In ER diagrams, entity types are rectangles, relationships are diamonds between the entities,
+        partial participation is a single line between entities, and total participation is a double
+        line between entities.
+
+
+
+- Attributes of Relationship Types
+
+    - Relationship types can also have attributes, similar to those of entity types.
+
+        EMPLOYEE <-> WORKS_ON <-> PROJECT
+                       - Hours
+
+
+    - Attributes of 1:1 or 1:N relationships can be migrated to one of the participating entities.  
+        1:1 relationship attributes can be migrated to either entity.  1:N relationship attributes
+        must be migrated to the 'N' side.
+
+
+    - Attributes of M:N relationships must be specified as relationship attributes.
+
+
+
+- Weak Entity Types
+
+    - 'Weak entity types' are entity types that do not have their own key attributes.  They belong
+        to an 'owner entity type', which is a 'strong entity type'.
+
+        DEPENDENT <-> BELONGS_TO <-> EMPLOYEE
+
+
+    - An 'identifying relationship' relates a weak entity type to its owner.  The weak entity type's
+        participation in this relationship is always total.
+
+
+
+- Relationships in COMPANY Database
+
+    1. MANAGES
+         - 1:1 relationship between EMPLOYEE and DEPARTMENT
+         - EMPLOYEE participation is partial
+         - DEPARTMENT participation is total
+
+    2. WORKS_FOR
+         - 1:N relationship between DEPARTMENT and EMPLOYEE
+         - both participations are total
+
+    3. CONTROLS
+         - 1:N relationship between DEPARTMENT and PROJECT
+         - PROJECT participation is total
+         - DEPARTMENT participation is partial, since some departments control no projects
+
+    4. SUPERVISION
+         - 1:N relationship between EMPLOYEE and EMPLOYEE
+         - both participations are partial, since not every employee has a supervisor
+
+    5. WORKS_ON
+         - M:N relationship between EMPLOYEE and PROJECT
+         - both participations are total
+         - has the 'Hours' attribute
+
+    6. DEPENDENTS_OF
+         - 1:N relationship between EMPLOYEE and DEPENDENT
+         - EMPLOYEE participation is partial
+         - DEPENDENT participation is total
+
+
+
+- Naming Conventions We Use
+
+    1. Entities are singular nouns.
+    2. Relationships are verbs.
+    3. Names are uppercase, separated by underscores.
+
+
+
+- ER Diagram for COMPANY Schema
