@@ -247,3 +247,20 @@ CHAPTER 7 - THE ENTITY RELATIONSHIP MODEL
 
 
 - ER Diagram for COMPANY Schema
+
+    - Standard ER Diagram with single/double lines for partial/total participation is at
+        'images/company_schema/ER-Original.jpeg'
+
+    - Alternative ER Diagram with (m,n) syntax that describe both participation and cardinality is at
+        'image/company_schema/ER-Alternate.jpeg'
+
+
+
+- UML Diagrams
+
+    - In UML, entities are called 'classes'.  They include both attributes and operations that can be
+        applied to class instances.  
+
+    - Relationships are called 'associations', and relationship instances are called 'links'.
+
+    - UML Diagram for the COMPANY schema is at 'images/company_schema/UML.jpeg'
