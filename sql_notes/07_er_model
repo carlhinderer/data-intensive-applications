@@ -264,3 +264,17 @@ CHAPTER 7 - THE ENTITY RELATIONSHIP MODEL
     - Relationships are called 'associations', and relationship instances are called 'links'.
 
     - UML Diagram for the COMPANY schema is at 'images/company_schema/UML.jpeg'
+
+
+
+- Ternary Relationships
+
+    SUPPLIER   <->   SUPPLY      <->   PROJECT
+      Sname            Quantity          Proj_name
+
+                        ^
+                        |
+                        v
+
+                     PART
+                       Part_no
