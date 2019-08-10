@@ -253,3 +253,64 @@ CHAPTER 2 - GETTING STARTED
 
         # Delete the movie we created
         > db.movies.deleteOne({title: "Star Wars: Episode IV - A New Hope"})
+
+
+
+- Data Types
+
+    - Documents in Mongo can be thought of as 'JSON-like', since they are conceptually similar to 
+        objects in Javascript.  They have all the basic JSON types (null, boolean, numeric, string,
+        array, object), as well as a few other types.
+
+        1. null
+
+             {"x" : null}
+
+        2. boolean
+
+             {"x" : true}
+
+        3. numeric
+
+             # Floating Point
+             {"x" : 3.14}
+             {"x" : 3}
+
+             # Integers
+             {"x" : NumberInt("3")}
+             {"x" : NumberLong("3")}
+
+        4. string
+
+             {"x" : "foobar"}
+
+        5. date
+
+             # Dates are stored in 64-bit integers representing milliseconds since Unix epoch
+             {"x" : new Date()}
+
+        6. regular expressions
+
+             {"x" : /foobar/i}
+
+        7. array
+
+             {"x" : ["a", "b", "c"]}
+
+        8. embedded document
+
+             {"x" : {"foo" : "bar"}}
+
+        9. object id
+
+             # An object id is a 12-byte ID for documents
+             {"x" : ObjectId()}
+
+        10. binary data
+
+              # Binary data is a string of arbitrary bytes.  It is the only way to store non-UTF8 strings.
+
+        11. code
+
+              # Arbitrary Javascript may be stored in queries and documents
+              {"x" : function() { /*...*/ } }
