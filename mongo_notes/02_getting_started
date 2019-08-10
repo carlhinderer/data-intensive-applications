@@ -1,0 +1,107 @@
+----------------------------------------------------
+CHAPTER 2 - GETTING STARTED
+----------------------------------------------------
+
+- Basic Mongo Concepts
+
+    - A 'document' is the basic unit of data.  It is roughly equivalent to a row in a table.
+
+    - A 'collection' is similar to a table, with a dynamic schema.
+
+    - A single instance of Mongo can hold multiple independent 'databases', each of which can have its
+        own collections.
+
+    - Each document has a special key, '_id', that is unique within a collection.
+
+    - Mongo is distributed with a simple but powerful tool called the mongo 'shell'.  The shell provides
+        built-in support for administering Mongo instances and manipulating data.  It is also a fully
+        functional Javascript interpreter.
+
+
+
+- Documents
+
+    - A document is an ordered set of keys with associated values.  The representation of a document 
+        varies by programming language.  For example, in Javascript, documents are represented as
+        objects:
+
+        {
+          "greeting" : "Hello, world!",
+          "views": 3
+        }
+
+
+    - The keys in a document are strings.  All UFF-8 characters are allowed, except '\0', '.', and
+        '$'.
+
+
+    - Mongo is type-sensitive and case-sensitive.
+
+        // These are different documents
+        {"count" : 5}
+        {"count" : "5"}
+
+        // These are different also
+        {"count" : 5}
+        {"Count" : 5}
+
+
+    - A document cannot contain duplicate keys.
+
+
+    - Key/value pairs in documents are ordered, but in general you should not design your schema to depend
+        on this ordering.  
+
+
+
+- Collections
+
+    - A collection is a group of documents.  Collections have dynamic schemas, which means that the
+        documents within a collection can have any number of different keys and values.
+
+
+    - Since collections don't enforce a schema, why should we have them at all?  They can logically
+        group related documents together.  It also speeds up queries, because we can narrow the space
+        of documents to search, and we can create indexes on individual collections.
+
+
+    - Collections have a unique UTF-8 name.  The can contain any character besides '\0', ' ', or '$',
+        and cannot begin with 'system.'
+
+
+    - Namespaced subcollections can be referenced using the . operator.  For example, we could have a 
+        collection named 'blog.posts' and another named 'blog.authors'.  
+
+
+
+- Databases
+
+    - Mongo groups collections into databases.  A single instance of Mongo can host multiple databases,
+        each of which groups together 0 or more collections.
+
+
+    - Databases also have a name.  They cannot contain spaces and should consist of alphanumeric ASCII.
+        Database names are case-sensitive, and to keep things simple, we can just use lowercase names.
+
+
+    - The database names will actually end up as files on your filesystem, which is the reasons for the
+        restrictions on the names.
+
+
+    - There are several reserved names, because they refer to special databases that may be present in
+        your system.  
+
+        admin  = The 'admin' database plays a role in authentication and authorization.  Also, access to
+                   this database is rqeuired for some admin operations.
+
+        local  = The 'local' database stores data specific to a single server.  In replica sets, this
+                   database stores data used in the replication process.  The 'local' database itself
+                   is never replicated.
+
+        config = Sharded Mongo clusters use the 'config' database to store information about each shard.
+
+
+    - By concatenating the database and collection names, you can get a fully qualified collection name
+        called a 'namespace'.  For instance, if you are using the 'blog.posts' collection in the 'cms'
+        database, the namespace of the collection is 'cms.blog.posts'.  Namespaces should be less than
+        100 bytes long.
