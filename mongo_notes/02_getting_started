@@ -171,3 +171,85 @@ CHAPTER 2 - GETTING STARTED
 
         # Switch to the 'video' db
         > use video
+
+
+
+- Creating Documents in the Shell
+
+    - The 'insertOne' function add a document to a collection.  
+
+        # Create a local variable called 'movie'
+        > movie = {"title" : "Star Wars: Episode IV - A New Hope",
+                   "director" : "George Lucas",
+                   "year" : 1977}
+
+
+        # Save the movie to our 'movies' collection
+        > db.movies.insertOne(movie)
+
+        {
+          "acknowledged" : true,
+          "insertedId" : ObjectId("5721794b349c32b32a012b11")
+        }
+
+
+
+- Reading Documents in the Shell
+
+    - The 'find' and 'findOne' functions can be used to query a collection.
+
+        # See the movies in our collection
+        > db.movies.find()
+
+        {
+          "_id" : ObjectId("5721794b349c32b32a012b11"),
+          "title" : "Star Wars: Episode IV - A New Hope",
+          "director" : "George Lucas",
+          "year" : 1977
+        }
+
+
+        # See one movie from our collection
+        > db.movies.findOne()
+
+        {
+          "_id" : ObjectId("5721794b349c32b32a012b11"),
+          "title" : "Star Wars: Episode IV - A New Hope",
+          "director" : "George Lucas",
+          "year" : 1977
+        }
+
+
+
+- Updating Documents in the Shell
+
+    - We can use the 'update' function to modify our document.  The function takes 2 parameters: the 
+        criteria to find which document to update and the new document.
+
+        # Add field for reviews in our document
+        > db.movies.update({title : "Star Wars: Episode IV - A New Hope"},
+                           {$set : {reviews: []}})
+
+        { "acknowledged" : true, "matchedCount" : 1, "modifiedCount" : 1 }
+
+
+        # Make sure are new field is in the document
+        > db.movies.find()
+
+        {
+          "_id" : ObjectId("5721794b349c32b32a012b11"),
+          "title" : "Star Wars: Episode IV - A New Hope",
+          "director" : "George Lucas",
+          "year" : 1977,
+          "reviews" : [ ]
+        }
+        
+
+
+- Deleting Documents in the Shell
+
+    - The 'deleteOne' and 'deleteMany' functions delete documents from the database.  Both functions
+        take filters specifying criteria for removal.
+
+        # Delete the movie we created
+        > db.movies.deleteOne({title: "Star Wars: Episode IV - A New Hope"})
