@@ -105,3 +105,69 @@ CHAPTER 2 - GETTING STARTED
         called a 'namespace'.  For instance, if you are using the 'blog.posts' collection in the 'cms'
         database, the namespace of the collection is 'cms.blog.posts'.  Namespaces should be less than
         100 bytes long.
+
+
+
+- Running the Mongo Server
+
+    - The MongoDB server is installed as a service in Ubuntu.
+
+        # Check the service status
+        $ sudo systemctl status mongodb
+
+        # Verify the service is responding with a diagnostic command
+        $ mongo --eval 'db.runCommand({ connectionStatus: 1 })'
+
+
+        # Start the server manually
+        $ sudo systemctl start mongodb
+
+        # Stop the server
+        $ sudo systemctl stop mongodb
+
+        # Restart the server
+        $ sudo systemctl restart mongodb
+
+
+        # Enable the server to start automatically
+        $ sudo systemctl enable mongodb
+
+        # Disable the server from starting automatically
+        $ sudo systemctl disable mongodb
+
+
+
+- Running the Mongo Shell
+
+    - The Javascript shell is used to interact with the server.
+
+        # Run the shell
+        $ mongo
+
+
+        # All the standard Javascript syntax and libraries work in the shell
+        > x = 200;
+        > x / 5;
+        > Math.sin(Math.PI / 2);
+        > new Date("2018/1/1");
+        > "Hello World!".replace("World", "MongoDB");
+
+
+        # We can even define and call Javascript functions
+        > function factorial (n) {
+            if (n <= 1) return 1;
+            return n * factorial (n - 1);
+        }
+
+        > factorial(5);
+
+
+    - On startup, the shell connects to the 'test' database on a Mongo server and assigns this database
+        connection to the global variable 'db'.  This variable is the primary access point to your
+        Mongo server through the shell.
+
+        # See the database 'db' is currently assigned to
+        > db
+
+        # Switch to the 'video' db
+        > use video
