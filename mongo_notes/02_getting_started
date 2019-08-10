@@ -314,3 +314,66 @@ CHAPTER 2 - GETTING STARTED
 
               # Arbitrary Javascript may be stored in queries and documents
               {"x" : function() { /*...*/ } }
+
+
+
+- Dates
+
+    - In Javascript, the 'Date' class is used for Mongo's date type.  When creating a new 'Date' object,
+        we always call 'new Date()'.   Calling the constructor as a function ('Date()') without 'new'
+        returns a string representation of the date, not an actual 'Date' object.
+
+    - Dates in the shell are displayed using local time zone settings.  However, dates in the database
+        are just stored as milliseconds since the epoch, with no time zone information.
+
+
+
+- Arrays
+
+    - Arrays can be used for both ordered operations (as lists, stacks, or queues) and unordered operations
+        (as sets).  Arrays are heterogenous.  
+
+    - Mongo understands array structures and knows how to reach inside of arrays to perform operations
+        on their contents.  This allows us to query on arrays and build indexes using their contents.
+
+    - Mongo also allows atomic updates that modify the contents of arrays.
+
+
+
+- Embedded Documents
+
+    - Documents can be used as the value for a key.  
+
+        {
+          "name" : "John Doe",
+          "address" {
+            "street" : "123 Park Street",
+            "city" : "Anytown",
+            "state" : "NY"
+          }
+        }
+
+
+
+- _id and ObjectIds
+
+    - Every document stored in Mongo must have an "_id" key.  The '_id' key's value can be any type, but
+        it defaults to an 'ObjectId'.  In a single collection, every document must have a unique value
+        for "_id", which ensures that every document in a collection can be uniquely identified.
+
+    - The 'ObjectId' class is designed to be lightweight, while still being easy to generate in a globally
+        unique way across different machines.  Mongo's distributed nature is the reason why it uses
+        ObjectIds as opposed to something more traditional like an auto-incrementing primary key.
+
+
+    - The ObjectId is 12 bytes:
+
+        Bytes 0-3: Timestamp (Second; this means documents will be sorted in roughly insertion order)
+        Bytes 4-6: Machine (Hash of the machine's hostname)
+        Bytes 7-8: PID (PID of the ObjectId-generating process)
+        Bytes 9-11: Increment (Incrementing counter that gives uniqueness within a seond in a process)
+
+
+    - If no '_id' key is present when a document is inserted, one will be automatically added to the
+        inserted document.  This can be handled by the Mongo server, but is more often done by the 
+        driver on the client side.
