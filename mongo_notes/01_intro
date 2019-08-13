@@ -46,7 +46,7 @@ CHAPTER 1 - INTRO
              opportunistic locking in its WiredTiger storage engine to maximize concurrency and
              throughput.
 
-         - It uses as much RAM as possible a its cache and attempts to automatically choose the correct
+         - It uses as much RAM as possible for its cache and attempts to automatically choose the correct
              indexes for queries.
 
          - For some functionality, the database offloads processing and logic to the client side (handled

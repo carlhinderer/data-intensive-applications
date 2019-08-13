@@ -15,14 +15,14 @@ CHAPTER 2 - GETTING STARTED
 
     - Mongo is distributed with a simple but powerful tool called the mongo 'shell'.  The shell provides
         built-in support for administering Mongo instances and manipulating data.  It is also a fully
-        functional Javascript interpreter.
+        functional JavaScript interpreter.
 
 
 
 - Documents
 
     - A document is an ordered set of keys with associated values.  The representation of a document 
-        varies by programming language.  For example, in Javascript, documents are represented as
+        varies by programming language.  For example, in JavaScript, documents are represented as
         objects:
 
         {
@@ -139,13 +139,13 @@ CHAPTER 2 - GETTING STARTED
 
 - Running the Mongo Shell
 
-    - The Javascript shell is used to interact with the server.
+    - The JavaScript shell is used to interact with the server.
 
         # Run the shell
         $ mongo
 
 
-        # All the standard Javascript syntax and libraries work in the shell
+        # All the standard JavaScript syntax and libraries work in the shell
         > x = 200;
         > x / 5;
         > Math.sin(Math.PI / 2);
@@ -259,7 +259,7 @@ CHAPTER 2 - GETTING STARTED
 - Data Types
 
     - Documents in Mongo can be thought of as 'JSON-like', since they are conceptually similar to 
-        objects in Javascript.  They have all the basic JSON types (null, boolean, numeric, string,
+        objects in JavaScript.  They have all the basic JSON types (null, boolean, numeric, string,
         array, object), as well as a few other types.
 
         1. null
@@ -312,14 +312,14 @@ CHAPTER 2 - GETTING STARTED
 
         11. code
 
-              # Arbitrary Javascript may be stored in queries and documents
+              # Arbitrary JavaScript may be stored in queries and documents
               {"x" : function() { /*...*/ } }
 
 
 
 - Dates
 
-    - In Javascript, the 'Date' class is used for Mongo's date type.  When creating a new 'Date' object,
+    - In JavaScript, the 'Date' class is used for Mongo's date type.  When creating a new 'Date' object,
         we always call 'new Date()'.   Calling the constructor as a function ('Date()') without 'new'
         returns a string representation of the date, not an actual 'Date' object.
 
@@ -377,3 +377,79 @@ CHAPTER 2 - GETTING STARTED
     - If no '_id' key is present when a document is inserted, one will be automatically added to the
         inserted document.  This can be handled by the Mongo server, but is more often done by the 
         driver on the client side.
+
+
+
+- Using the Mongo Shell
+
+    - The shell can be connected to any Mongo instance that your machine can reach.  
+
+        # Specify the hostname, port, and db to connect to
+        $ mongo some-host:30000/myDB
+
+
+    - Sometimes, its useful to start the shell without connecting to a db, and connecting later.
+
+        # Start shell with no db
+        $ mongo --nodb
+
+        # Connect to host
+        > conn = new Mongo("some-host:30000")
+
+        # Connect to db
+        > db = conn.getDB("myDB")
+
+
+    - The 'help' command can be used in different contexts:
+
+        # Get list of help commands
+        > help
+
+        # Help on db methods
+        > db.help()
+
+        # Help con collection methods
+        > db.mycoll.help()
+
+
+        # Show database names
+        > show dbs
+
+        # Show collections in current database
+        > show collections
+
+
+        # Typing any method without parentheses will show you its implementation
+        > db.movies.updateOne
+
+
+
+- Running Scripts with the Shell
+
+    - In addition to using the shell interactively, you can also pass the shell JavaScript files to 
+        execute.
+
+        # Execute scripts
+        $ mongo script1.js script2.js script3.js
+
+        # Execute scripts on a non-default mongo instance
+        $ mongo --quiet server-1:30000/foo script1.js script2.js script3.js
+
+
+    - A script can also be run from within the shell.
+
+        # Run a script from the shell
+        > load("script1.js")
+
+
+    - Scripts have access to the 'db' variable (and other globals).  There are JavaScript methods that
+        are equivalent to the other shell helpers.
+
+        // Switch to db
+        db.getSisterDB("video")
+
+        // Get list of dbs
+        db.getMongo().getDBs()
+
+        // Get list of collections in a db
+        db.getCollectionNames()
