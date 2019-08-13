@@ -453,3 +453,78 @@ CHAPTER 2 - GETTING STARTED
 
         // Get list of collections in a db
         db.getCollectionNames()
+
+
+
+- Example Script
+
+    - We can also use scripts to inject variables into the shell.  For example, the following is a
+        script that initializes a helper function that connects to a locally running database on a given
+        port and database.
+
+
+        // defineConnectTo.js
+        var connectTo = function(port, dbname) {
+            if (!port) {
+                port = 27017;
+            }
+
+            if (!dbname) {
+                dbname = "test";
+            }
+
+            db = connect("localhost:" + port + "/" + dbname);
+            return db;
+        }
+
+
+    - Now, we can load this script into the shell, and the 'connectTo' function is defined.
+
+        > load('defineConnectTo.js')
+
+        > typeof connectTo
+        function
+
+
+
+- Running Command-Line Programs in the Shell
+
+    - We can use the 'run()' function to run command-line programs from the Mongo shell.
+
+        > run('ls', '-l', '/home/myUser/my-scripts/')
+
+
+
+- Creating a .mongorc.js File
+
+    - If you have frequently loaded scripts, you may want to put them in your .mongorc.js file.  This
+        file is executed whenever you start up the shell.  
+
+
+    - For example, we can create a greeting that will be displayed whenever we log into the shell.
+
+        // .mongorc.js
+        var compliment = ["attractive", "intelligent", "like Batman"];
+        var index = Math.floor(Math.random() * 3);
+
+        print("Hello, you're looking particularly " + compliment[index] + " today!");
+
+
+    - We can also use this technique to prevent certain functions from being executed.
+
+        // .mongorc.js
+        var no = function() {
+            print('Not on my watch.')
+        }
+
+        db.dropDatabase = DB.prototype.dropDatabase = no;
+        DBCollection.prototype.drop = no;
+        DBCollection.prototype.dropIndex = no;
+
+
+    - We can customize the prompt by setting the 'prompt' variable.
+
+        // .mongorc.js
+        prompt = function() {
+            return (new Date()) + "> ";
+        }
