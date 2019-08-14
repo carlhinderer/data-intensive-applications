@@ -315,3 +315,54 @@ CHAPTER 3 - CRUD
         > db.blog.updateOne({'post' : post_id},
                             {'$inc' : {'comments.0.votes' : 1}})
 
+
+
+- Upserts
+
+    - With upserts, if no document is found that matches the update criteria, a new document will be 
+        created by combining the criteria and updated documents.  If a matching update is found, it will
+        be updated normally.
+
+        // If the url exists, increment the page views.  Otherwise, insert the url.
+        > db.analytics.updateOne({'url' : '/blog'},
+                                 {'$inc' : {'pageviews' : 1}},
+                                 {'upsert' : true})
+
+
+- The 'save' Shell Helper
+
+    - The 'save' function is a shell function that lets you insert a document if it doesn't exist and
+        update it if it does.  It takes the document as a parameter.  If the document contains an 
+        '_id' key, an upsert will be performed.  Otherwise, an insert will be performed.
+
+        > var x = db.testcol.findOne()
+        > x.num = 42
+        > db.testcol.save(x)
+
+
+
+- Updating Multiple Documents
+
+    - The 'updateMany' method is used to update a set of matching documents.
+
+        // Insert several records
+        > db.users.insertMany([
+                                {birthday: '10/13/1978'},
+                                {birthday: '10/13/1978'},
+                                {birthday: '10/13/1978'}
+                              ])
+
+        // Update all the records
+        > db.users.updateMany({'birthday': '10/13/1978'},
+                              {'$set' : {'gift' : 'Happy Birthday!'}})
+
+
+
+- Returning Updated Documents
+
+    - The 'findOneAndDelete', 'findOneAndReplace', and 'findOneAndUpdate' methods are conveniences that
+        combine a find operation with another operation.
+
+        db.processes.findOneAndUpdate({"status" : "READY"},
+                                      {"$set" : {"status" : "RUNNING"}},
+                                      {"sort" : {"priority" : -1}, "returnNewDocument": true})
