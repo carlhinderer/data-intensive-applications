@@ -196,3 +196,122 @@ CHAPTER 3 - CRUD
         // Pass in a negative number to decrement
         > db.games.updateOne({'game' : 'pinball', 'user' : 'joe'},
                              {'$inc' : {'score' : -1}})
+
+
+- Array Operators
+
+    - The '$push' modifier adds elements to the end of an array.  If the array doesn't yet exist, it will
+        be created.
+
+        // Create the 'comments' array and add a comment to it
+        > db.blog.posts.updateOne({'title' : 'A blog post'},
+                                  {'$push' : {'comments' : 
+                                                 {'name' : 'joe',
+                                                  'email' : 'joe@example.com',
+                                                  'content' : 'Great Post!'} })
+
+
+    - To push multiple values in one operation, the '$each' modifier is used.
+
+        // Add the 'hourly' array and add multiple values to it
+        > db.stock.ticker.updateOne({'_id' : 'GOOG'},
+                                    {'$push' : {'hourly' :
+                                                  {'$each' : [562.77, 562.79, 559.12]}} })
+
+
+    - We can also limit the size of the array by using the '$slice' modifier to prevent an array from 
+        growing beyond a certain size.
+
+        // Limit the array to the last 10 elements pushed
+        > db.movies.updateOne({'genre' : 'horror'},
+                              {'$push' : {'top10' :
+                                             '$each' : ['Nightmare on Elm Street', 'Saw'],
+                                             '$slice' : -10} })
+
+
+    - We can even sort the objects before slicing them.
+
+        // Sort by rating, then limit size to 10
+        db.movies.updateOne({'genre' : 'horror'},
+                            {'$push' : ['top10' : {'$each' : [{'name' : 'Nightmare on Elm Street', 
+                                                               'rating' : 6.6},
+                                                              {'name' : 'Saw',
+                                                               'rating' : 4.3}]
+                                                   '$slice' : -10,
+                                                   '$sort' : {'rating' : -1}} ]})
+
+
+
+- Using Arrays as Sets
+
+    - We can also treat an array as a set, only adding values if they are not already present.  This is
+        done by using '$ne' in the query document.
+
+        // Add an author to the citations if they aren't already there
+        > db.papers.updateOne({'authors cited' : {'$ne' : 'Richie'}},
+                              {'$push' : {'authors cited' : 'Richie'}})
+
+
+    - The '$addToSet' modifier can be used to do the same thing.
+
+        // Add an email address if it isn't already present
+        > db.users.updateOne({'_id' : ObjectId("4b2d75476cc613d5ee930164"},
+                             {'$addToSet' : {'emails' : 'joe@example.com'}})
+
+
+
+- Removing Elements from an Array
+
+    - The '$pop' operation can be used to remove elements from either end of the array.
+
+        // Remove an element from the end of the array
+        {'$pop' : {'key' : 1}}
+
+        // Remove an element from the beginning of the array
+        {'$pop' : {'key' : -1}}
+
+
+    - The '$pull' operation is used to remove an element based on specific criteria.
+
+        // Create an array
+        > db.lists.insertOne({'todo' : ['dishes', 'laundry', 'dry cleaning'] })
+
+        // Remove laundry from our todo list
+        > db.lists.updateOne({}, {'$pull' : {'todo' : 'laundry'}})
+
+
+
+- Positional Array Modifications
+
+    - We can modify array elements by position.
+
+        // This is our document
+        > db.blog.posts.findOne()
+
+        {
+            "_id" : ObjectId("4b329a216cc613d5ee930192"),
+            "content" : "...",
+            "comments" : [
+                {
+                    "comment" : "good post",
+                    "author" : "John",
+                    "votes" : 0
+                },
+                {
+                    "comment" : "i thought it was too short",
+                    "author" : "Claire",
+                    "votes" : 3
+                },
+                {
+                    "comment" : "free watches",
+                    "author" : "Alice",
+                    "votes" : -1
+                }
+            ]
+        }
+
+
+        // Increment the number of votes for the first comment
+        > db.blog.updateOne({'post' : post_id},
+                            {'$inc' : {'comments.0.votes' : 1}})
+
