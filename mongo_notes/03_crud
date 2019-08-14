@@ -1,0 +1,51 @@
+----------------------------------------------------
+CHAPTER 3 - CRUD
+----------------------------------------------------
+
+- Inserting Documents
+
+    - To insert a single document, the 'insertOne' method is used.
+
+        > db.movies.insertOne({'title': 'Stand By Me'})
+
+
+    - To insert multiple documents, the 'insertMany' method is used.  Instead of making a round trip to
+        the database for each insert, they will be inserted in bulk.
+
+        > db.movies.insertMany([{'title': 'Ghostbusters'},
+                                {'title': 'E.T.'},
+                                {'title': 'Blade Runner'}]);
+
+
+    - Current versions of Mongo don't support messages longer than 48 MB, so there is a hard limit to how
+        many inserts can be done at one time.  If you try to insert more than 48MB, many drivers will split
+        your insert into multiple 48MB operations.
+
+
+    - There are 2 options for dealing with errors that occur during 'insertMany' operations.
+
+        1. If we specify 'true' for the 'ordered' key, the insert will ensure that the documents are
+             inserted in the order they are provided.  If a document produces an error during the insert,
+             no documents beyond that point in the array will be inserted.  This is the default option
+             for 'insertMany'.
+
+        2. If we specfiy 'false' for the 'ordered' key, Mongo may reorder the inserts to improve
+             performance.  If an error occurs, the insert operation will keep trying to insert as many
+             documents as possible.
+
+
+        // Unordered insertMany, fails since the ids are duplicated
+        > db.movies.insertMany([
+            {'_id' : 3, 'title' : 'Sixteen Candles'},
+            {'_id' : 4, 'title' : 'The Terminator'},
+            {'_id' : 4, 'title' : 'The Princess Bride'},
+            {'_id' : 5, 'title' : 'Scarface'}],
+          {'ordered': false})
+
+
+    - The validation done on insert operations is minimal.  It checks the document's basic structure, adds
+        an '_id' field if one does not exist, and makes sure all documents are less than 16 MB.
+
+
+    - In Mongo versions <3.0, the 'insert' operation was the primary method for inserting documents.  As
+        of Mongo 3.2, this is still suppored for backwards compatibility.
