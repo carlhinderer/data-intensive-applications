@@ -137,3 +137,62 @@ CHAPTER 3 - CRUD
 
         // Using the _id for the filter will guarantee you won't have a duplicate key problem
         > db.people.replaceOne({'_id' : ObjectId("4b2b9f67a1f631733d917a7c")})
+
+
+
+- Using Update Operators
+
+    - Usually, only certain portions of a document need to be updated.  You can update specific fields in
+        a document using atomic 'update operators'.  Update operators are special keys that can be used
+        to specify complex update operations.
+
+
+    - For instance, if we have the following document:
+
+        {
+          '_id' : ObjectId('4b253b067525f35f94b60a31'),
+          'url' : 'www.example.com',
+          'pageviews' : 52
+        }
+
+      To increment the page views, we use the '$inc' modifier:
+
+        > db.analytics.updateOne({'url' : 'www.example.com'}, 
+                                 {'$inc' : {'pageviews' : 1}})
+
+
+    - The '$set' modifier sets the value of a field.  If the field does not yet exist, it will be 
+        created.  
+
+        > db.users.updateOne({'_id' : ObjectId('4b253b067525f35f94b60a31')},
+                             {'$set' : {'favorite book' : 'War and Peace'}})
+
+
+    - To remove a key from the document, the '$unset' modifier can be used.
+
+        > db.users.updateOne({'name' : 'joe'},
+                             {'$unset' : {'favorite book' : 1}})
+
+
+    - The '$set' modifier can also be used to add and alter subdocuments.
+
+        > db.blog.posts.updateOne({'author.name' : 'joe'},
+                                  {'$set' : {'author.name' : 'joe schmoe'}})
+
+
+
+- Incrementing and Decrementing
+
+    - The '$inc' operator will add a new integer key if one does not yet exist.
+
+        // Initialize the 'score' key with an initial value
+        > db.games.updateOne({'game' : 'pinball', 'user' : 'joe'}, 
+                             {'$inc' : {'score' : 50}})
+
+        // Increment the score by 100
+        > db.games.updateOne({'game' : 'pinball', 'user' : 'joe'},
+                             {'$inc' : {'score' : 100}})
+
+        // Pass in a negative number to decrement
+        > db.games.updateOne({'game' : 'pinball', 'user' : 'joe'},
+                             {'$inc' : {'score' : -1}})
