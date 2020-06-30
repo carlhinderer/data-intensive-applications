@@ -1,0 +1,320 @@
+-----------------------------------------------------------------------
+|  CHAPTER 2 - REFERENCE ARCHITECTURE FOR DATA-INTENSIVE SYSTEMS      |
+-----------------------------------------------------------------------
+
+- Every software application can be divided into 2 types:
+
+    1. Compute-intensive
+    2. Data-intensive
+
+  This book is about data-intensive applications.
+
+
+- Given the vast amount of data that varies in terms of its format and speed of generation, 
+    how can I effectively and efficiently make use of data in order to:
+
+    - Make my processes more efficient by gaining an insight into the business flow?
+    - Understand my customers better?
+    - Provide my users with relevant information?
+    - Generate additional business streams without losing sight of the competition?
+
+
+- Data Ingestion
+
+    - First, bring the data into a target system such as Hadoop, Mongo, or Cassandra.
+
+    - The data can arrive in 2 ways:
+
+        1. Batch Ingestion = data arrives in bulk format
+
+            Typically used when you want to ingest data from one source to another (ie from
+              your CRM into Hadoop).
+
+        2. Stream Ingestion = continuous source of data emits events regularly (over a range 
+              of milliseconds to seconds), you need a separate ingestion mechanism to ingest
+              data into your big data storage platform.
+
+            You will typically employ some sort of queuing system where events will be 
+              written and read regularly. Having a queuing system helps to offload the load 
+              from the source.
+
+    - Having a robust data ingestion system that is capable of scaling, and that is 
+        distributed and supports parallel consumption, is vital to your big data application!
+
+
+- Data Preparation
+
+    - Here, data is preprocessed so that it can be processed efficiently by different
+        processing scripts.  
+
+    - Data preparation involves such steps as:
+
+        1. Storing data in the correct format so that processing scripts can work on 
+             it efficiently (Plaintext, CSV, Sequence File, Avro, and Parquet)
+
+        2. Partitioning the data across hosts for things such as data locality.
+
+        3. Data access – having data spread across your cluster in such a manner that multiple 
+            teams can work with the data without interfering with each other's work. This is 
+            typically termed multi-tenancy. Defining access control lists, and different user 
+            groups, is part of the data access strategy.
+
+
+- Data Processing
+
+    - Data processing is all about taking input data and transforming it into a usable format.
+        For example:
+
+        - Converting to a different file format
+        - Converting a CSV file stored in HDFS to an initial Hive table
+
+    - Once the data is transformed into a usable state, some kind of analytics are performed
+        on the data.  
+
+
+- Workflow Management
+
+    - At any given time, there will be more than one analytics job running on your master 
+        dataset. There might be 10 different map reduce jobs running, or x number of hive 
+        scripts, sqoop jobs, and pig scripts. These need to be managed somehow so that they 
+        are scheduled at the right time, and do not consume significant resources. 
+
+    - Perhaps you need to automate the whole workflow, consisting of many hive scripts. Workflow 
+        management is the component that you use to manage different jobs being executed on your 
+        big data system.
+
+    - Apache Oozie
+
+        - Apache Oozie is a workflow scheduler system that is responsible for managing the jobs 
+            running on a Hadoop system. 
+
+        - The jobs that are executed by Oozie are directed acyclic graphs that have a defined 
+            starting state and a defined end state. 
+
+        - An Oozie workflow is a collection of action nodes (code that does the actual processing 
+            of data) and control nodes (nodes that make sure the graph is being executed properly). 
+
+
+- Data Acess
+
+    - Example possibilities:
+
+        - SQL queries
+        - Hive scripts
+        - REST APIs
+        - query from indexing engine like Solr
+        - JDBC interface
+
+
+- Data Insight
+
+    - Data processing typically produces KPIs
+
+    - Examples of data visualization possibilities:
+
+        - Elastic Search Kibana
+        - Power BI
+        - Tableau
+
+
+- Data Governance
+
+    - Concerns:
+
+        - Data availability
+        - Data security
+        - Data usability
+        - Data lineage
+        - Auditing
+
+
+- Data Pipeline
+
+    - Mechanism to move data between different components of your architecture.
+
+    - Consider it a data bus that is fault-tolerant and distributed.
+
+
+
+- Examples:
+
+    - ML Use Case:
+        Try to detect malware based on checking patterns in its code against known malware.
+
+    - Data Enrichment Use Case:
+        You want to know who is accessing your network in real time, so you get all the IP
+          addresses of clients from your firewall logs, then look up the domain name of each
+          IP address.  Compare against list of known blacklisted domains.
+
+    - ETL Use Case:
+        You are a telecom and want to detect any anomalies in modems.  You extract data from
+          the modems, transform it into a data structure for processing, and load it into a
+          data lake for future processing.
+
+
+
+- Desired Properties of a Data-Intensive System
+
+    1. Robust and Fault-Tolerant
+
+        - This entire approach tends to be built on commodity hardware
+
+        - System should behave the same in the face of machines going down randomly
+
+        - Distributed systems consist of distributed data (through sharding and 
+            partitioning), replicated data, and redundant services
+
+        - Another way of providing fault tolerance involves spreading out infrastructure 
+            geographically
+
+        - Another way of providing fault tolerance includes having a standby system
+
+    2. Low-Latency Reads and Updates
+
+        - Generally want fast reads
+
+        - And fast writes when required
+
+    3. Scalable
+
+        - Favor horizontal scaling over vertical scaling
+
+    4. General
+
+        - Should support a variety of applications
+        - Should be able to easily introduce new technologies
+
+    5. Extensible
+
+        - New features can be added with minimal architectural changes
+
+    6. Allows Ad-Hoc Queries
+
+        - Anyone should be able to create new business streams from the data
+
+    7. Minimal Maintenance
+
+        - Divide system into smaller subsystems to make maintenance less complex
+
+        - Use log aggregation so you trace requests across entire 
+
+
+
+- The CAP Theorem
+
+    - Eric Brewer 
+
+        It is impossible for a distributed data store to simultaneously provide more than
+          2 of the following 3 guarantees:
+
+          1. Consistency
+               Every read receives the most recent write or an error
+
+          2. Availability
+               Every request receives a (non-error) response, without the guarantee that it 
+                 contains the most recent write
+
+          3. Partition tolerance
+               The system continues to operate despite packets being dropped at the network
+                 level
+
+
+    - In a distributed system, partition tolerance is almost always assumed.  So the real 
+        choice is between consistency and availability.
+
+
+
+- Architectural Principles for Data-Intensive Systems
+
+    1. Service Orientation
+
+        The underlying system's capabilities will be offered as a set of independent 
+          services capable of interacting with each other in a loosely coupled manner 
+          using lightweight interaction protocols.
+
+    2. Language and Technology Independence
+
+        The system architecture should be defined in such a manner that it is not biased 
+          toward a specific technology or a specific programming language. The capabilities 
+          defined as part of the architecture can be implemented in any language or 
+          technology of your choosing.
+
+    3. Distributed by Design
+
+        The system architecture should be defined in such a manner that each component of 
+          the system can be deployed on multiple network nodes transparently from the 
+          applications that use those components.
+
+    4. Resilient System
+
+        The system architecture should be designed for failure. The failure of a component 
+          within a specific system should be considered the norm, rather than an exception.
+
+    5. Extensible System
+
+        The system architecture should be designed for extensibility. Whenever there is a 
+          need to add a new capability to the system, it should require minimum effort with 
+          zero impact on the existing functionality. The added bonus is to add this functionality 
+          with zero downtime to the existing application.
+
+    6. Scalable System
+
+        The system architecture should be designed in such a manner that when demand grows, the 
+          system should be able to grow with it without any reconfiguration or downtime.
+
+    7. Commodity Hardware and Infrastructure
+
+        Each and every component of the overall system should be capable of being run on 
+          inexpensive, widely available, commodity hardware that is easily changeable.
+
+
+
+- Layers of Capabilities
+
+    1. UI Layer
+
+    2. Service gateway/API gateway Layer
+
+    3. Business Service Layer
+
+    4. Data Layer
+
+
+- UI Capabilities
+
+    1. Content Mashup
+    2. Multi Channel Support
+    3. AR/VR Support
+    4. Speech Recognition
+    5. User workflow
+
+
+- Service gateway/API gateway capabilities
+
+    1. Security (Authentication and authorization)
+    2. Traffic control (including throttling users)
+    3. Mediation (between requests and responses)
+    4. Caching
+    5. Routing
+    6. Orchestration (integrating 2 or more applications to automate a process)
+    7. Monitoring & Analytics
+    8. Threat Detection
+
+
+- Business Service Layer Capabilities
+
+    1. Microservices
+    2. Reliable messaging (decouples producers from consumers)
+    3. Distributed processing
+    4. Caching
+    5. Batch processing
+    6. Stream processing
+    7. Monitoring & Analytics
+    8. Validation
+
+
+- Data Layer Capabilities
+
+    1. Data Partitioning
+    2. Data Replication (for live backup and geolocation)
+    3. Data Services
