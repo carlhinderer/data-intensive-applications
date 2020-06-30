@@ -1,0 +1,142 @@
+-----------------------------------------------------------------------
+|  CHAPTER 1 - EXPLORING THE DATA ECOSYSTEM                           |
+-----------------------------------------------------------------------
+
+- With a data lake, data that is collected is seldom processed prior to being stored.  This is
+    because any processing may cause a loss of some information.
+
+  This doesn't mean that data doesn't get processed.  It means one copy is stored in the manner in
+    which it was received from the external system.
+
+
+- For a long time, organizations were technology-driven.  New organizations are becoming 
+    data-driven.
+
+
+- Contextual information about the places the data came from is extrememly important.  We
+    must know about the relevance and reliability of the data sources.  We should also
+    understand the entire lineage of the data.  
+
+  In data-driven organizations, the 'Data Evangelist' will drive this understanding.
+
+
+- Nowadays, data comes from a variety of sources, at varying speeds, and in a number of
+    different formats.
+
+  A few examples of sources:
+
+      - CRM structured data
+      - Social media
+      - Sensors
+      - Events
+      - Mobile
+      - Automobiles
+      - Machine data
+      - Weather
+      - Security access
+      - Contracts and regulatory
+
+
+- 3 Categories of Data
+
+    1. Structured data
+         Has a schema (ie XML)
+
+    2. Semi-structured data
+         Does not have a formal schema (ie web server logs)
+
+    3. Unstructured data
+         Hard to derive any structure (audio and video files, blog posts)
+
+
+- Whenever we collect data from an external source, there is always a clause about how that
+    data can be used.  This becomes very important when data is shared between organizations.
+    For instance, how can data about cyber threats be used?
+
+  There are many ways in which this sharing can be agreed upon by organizations.  2 such ways
+    include:
+
+    1. Traffic Light Protocol (RED, AMBER, GREEN, WHITE)
+
+    2. Information Exchange Policy Framework (IEPF) from first.org
+         [Example: ENCRYPT IN TRANSIT, ENCRYPT IN REST, PERMITTED ACTIONS,
+                   AFFECTED PARTY NOTIFICATIONS, OBFUSCATE AFFECTED PARTIES,
+                   UNMODIFIED RESALE OF DATA IS ALLOWED]
+
+
+- The 3 Vs
+
+    1. Volume
+    2. Variety
+    3. Velocity
+
+
+- A company has 2 reasons it might want to collect some data.
+
+    1. The organization wants to use the data to improve its own systems and processes.
+
+    2. The organization wants to place itself strategically in a situation where it can
+         generate new opportunities for itself.
+
+
+
+- Use Case #1 - Security
+
+    - Until a few years ago, the best way to combat external cyber security threats was to 
+        create a series of firewalls that were assumed to be impenetrable.
+
+      To combat internal attacks, antivirus software was considered to be sufficient.
+
+      This traditional defense mostly gave the illusion of security.  Looking for 'known bad
+        signatures' didn't help in combating APTs (Advanced Persistent Threats).
+
+
+    - As systems develop in complexity, coordinated hacking attacks persisted over a long 
+        period and exploited every aspect of vulnerable systems.
+
+
+    - For instance, a use case in the security domain is 'Anomaly Detection', which looks for
+        any non-homogenous event or transaction in a seemingly homogenous series of events.
+
+      As an example, banks look through credit card transactions for suspicious transactions.
+        Then a wide variety of organizations created hunting teams to look at various data for
+        anomalies.
+
+
+    - The main challenges when trying to create these hunting teams:
+
+        1. Data is scattered throughout the organization
+        2. Data quality issues and multiple data versioning issues
+        3. Access and contractual limitations
+
+
+    - All of these requirements and challenges drive the need for a platform that is capable of:
+
+        1. Long-term data retention
+        2. Correlating different data sources
+        3. Providing fast access to correlated data
+        4. Real-time analysis
+
+
+
+- Use Case #2 - Modem Data Collection
+
+    - A large telecom company provides modems to its clients for high-speed internet access.  It
+        purchases these modems from 4 different vendors and distributes them under its brand.
+
+
+    - The company receives 100 calls a day about the modem not working.  They have to handle 
+        calls and send replacements to customers, all at the company's expense.  
+
+      The company has found that 90% of the modems work fine and the actual problem is faulty or
+        incorrect setup.
+
+
+    - In order to take a proactive approach to this problem, the company will collect anonymous
+        data from each modem once a second, and the modem will send about 1KB of data each time.
+
+      With one million modems, this amounts to 1 GB/s, with 86 TB of total data generated each 
+        day.  
+
+
+    - The company needs a system capable of fast ingenstion and quick real-time analysis.
