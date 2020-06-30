@@ -1,0 +1,23 @@
+-----------------------------------------------------------------------
+|  ARCHITECTING DATA-INTENSIVE APPLICATIONS by Anuj Kumar             |
+-----------------------------------------------------------------------
+
+- Outline
+
+    1. Exploring the Data Ecosystem
+
+    2. Defining a Reference Architecture for Data-Intensive Systems
+    3. Patterns of the Data-Intensive Architecture
+    4. Discussing Data-Centric Architectures
+
+    5. Understanding Data Collection and Normalization Requirements and Techniques
+    6. Creating a Data Pipeline for Consistent Data Collection, Processing, and Dissemination
+    7. Building a Robust and Fault-Tolerant Data Collection System
+
+    8. Challenges of Data Processing
+    9. Let Us Process Data in Batches
+    10. Handling Streams of Data
+
+    11. Let Us Store the Data
+
+    12. When Data Dissemination is as Important as Data Itself
