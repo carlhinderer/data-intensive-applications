@@ -325,3 +325,159 @@ IV. Techniques and Soft Skills
     - Chaos Monkey = high latency situations, data centers going down, etc.
 
 - 'The Checklist Manifesto' by Atul Gawande
+
+
+
+
+
+--------------------------------------------------------------------
+| 7. SCOPE OF ARCHITECTURAL CHARACTERISTICS                        |
+--------------------------------------------------------------------
+
+- 'Building Evolutionary Architectures' by Ford, Kua, Parsons
+
+- We can't think of scalability only at the level of the entire system any more.  We must
+    think about the scalability of individual components, including databases.
+
+- Connascence = 2 components are connascent if a change in one component requires making
+                  changes to the other
+
+    - Static connascence = discoverable by static analysis tools
+    - Dynamic connascence = synchronous for request/response, asynchronous for event-driven
+
+- Functional Cohesion = Many business concepts semantically bind parts of a system
+                          together
+
+
+- Architectural Quantum = An independently deployable artifact with high functional 
+                            cohesion and synchronous connascence
+
+    1. Independently Deployable
+
+        - An architecture quantum includes all the necessary components to function
+            independently from all other parts of the architecture.  For instance, if
+            an application uses a database, it is part of the quantum, since the system
+            won't function without it.
+
+        - This means that virtually all legacy systems deployed using a single database
+            have a quantum of 1.
+
+    2. High Functional Cohesion
+
+        - Cohesion refers to how well the contained code is unified in purpose. For 
+            instance, a 'Customer' component with all properties and methods related
+            to a customer entity has high cohesion, whereas a 'Utility' component with
+            a random collection of methods would not.
+
+        - 'High Functional Cohesion' implies that the quantum does something purposeful.
+
+    3. Synchronous Connascence
+
+        - This refers to synchronous calls within an application context or between 
+            distributed services that form the quantum.
+
+        - For example, if one service calls another one synchronously, the services need
+            to be scaled up together.  They cannot have extreme differences in architectural
+            characteristics.
+
+        - For another example, if an 'Auction' service sent the winning user to a 'Payment'
+            service after the auction is over, and the payment service is backed up, one
+            call might go through while the others time out.  Using a message queue to 
+            create asynchronous connascence might be a better idea.
+
+
+- 'Domain Driven Design' by Eric Evans
+    - Bounded context
+    - We want reuse, but shared artifacts create a host of problems such as coupling
+    - Recognize that each entity works best within a localized context
+
+
+- Example - Auction Site
+    - Quanta #1: Bidder Feedback - Encompasses the bid stream and video stream of bids
+    - Quanta #2: Auctioneer - The live auctioneer
+    - Quanta #3: Bidder - Online bidders and bidding
+
+
+
+
+
+--------------------------------------------------------------------
+| 8. COMPONENT-BASED THINKING                                      |
+--------------------------------------------------------------------
+
+- Physical components = jar files in Java, dll in .NET, gems in Ruby
+                      = same address space as callers, communicate via function calls
+                      = compile-time dependencies
+
+- Components also appear as layers or subsystems (ie services communicating via TCP or REST).
+
+
+- Architecture Partitioning Examples
+ 
+    Layered Architecture            Modular Monolith
+
+       ---------                  ---------------------
+       | Layer |                  |  Module   Module  |
+       | Layer |                  |  Module   Module  |
+       | Layer |                  |  Module   Module  |
+       | Layer |                  ---------------------
+       ---------                            ^
+           ^                                |
+           |                                v
+           v                                DB
+           DB
+
+
+- Top-Level Partitioning Examples
+
+    Technical Partitioning          Domain Partitioning
+
+       -------------------       ----------------------------------------
+       |  Presentation   |       |  CatalogCheckout    UpdateInventory  |
+       |  Business Rules |       |  ShipToCustomer     Reporting        |
+       |  Service        |       |  Analytics          UpdateAccounts   |
+       |  Persistence    |       ----------------------------------------
+       -------------------                          ^
+                ^                                   |
+                |                                   v
+                v                                   DB
+                DB
+
+
+- Domain Partitioning
+
+    Advantages:
+      - Models how business functions
+      - Easier to build cross-functional teams around domains
+      - Aligns more closely with modular monolith and microservices architectures
+      - Message flow matches problem domain
+      - Easy to migrate to distributed architecture
+
+    Disadvantage:
+      - Customization code appears in multiple places
+
+
+- Technical Partitioning (ie MVC)
+
+    Advantages:
+      - Clearly separates customizable code
+      - Aligns more closely with layered architecture pattern
+
+    Disadvantages:
+      - Higher degree of global coupling, changing the 'Common' component affects all others
+      - Domain concepts may have to be duplicated in multiple layers
+      - Higher coupling at the data level (ie a single database)
+
+
+- Component Granularity
+    - Too fine-grained will lead to too much communication between components to get results
+    - Too coarse-grained will encourage high internal coupling, testing and deployment problems
+
+- Entity Trap Anti-Pattern
+
+    - Take all database entities and create a 'Manager' for each one
+    - For example, 
+        [AuctionManager] Create auctions, Browse auctions, Schedule auctions
+        [ItemManager] Create item, Display item, Upload item
+        [BidManager] Place bids, Display bids, Track bids
+    - This is what things like .NET NakedObjects, Java Isis, Rails scaffolding do automatically
