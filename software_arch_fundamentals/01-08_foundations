@@ -133,3 +133,108 @@ IV. Techniques and Soft Skills
 
 - An architect must do hands-on coding regularly.  It is usually a good idea for them
     not to be the blocker on a critical change.
+
+
+
+
+
+--------------------------------------------------------------------
+| 3. MODULARITY                                                    |
+--------------------------------------------------------------------
+
+- History of Modular Reuse
+    - Dijkstra's 'Goto Statement Considered Harmful' (1967)
+    - Structured Languages like C and Pascal (Early 1970s)
+    - Modular languages like Modula and Ada (Mid 1970s)
+    - OOP languages (Early 1980s)
+
+- Cohesion = related parts should be packaged together
+    - Dividing a cohesive module would result in increased coupling, decreased readability
+    - Automated checker can look at which instance variables used by which methods
+
+- Example of Tradeoff
+
+    - One module
+
+        Customer Maintenance
+          > add customer
+          > update customer
+          > get customer
+          > notify customer
+          > get customer orders
+          > cancel customer orders
+
+    - Split into 2 modules
+
+        Customer Maintenance
+          > add customer
+          > update customer
+          > get customer
+          > notify customer
+
+        Order Maintenance
+          > get customer orders
+          > cancel customer orders
+
+- Coupling = Can be analyzed by looking at cyclomatic complexity in the call graph
+
+- Abstractness = ratio of abstract types to concrete
+
+- Instability = ratio of outgoing coupling to outgoing and incoming coupling
+
+- Connascence = changing one requirement involves changing other components to
+                  maintain correctness of the system
+
+- Using Connascence to Improve Modularity
+    1. Minimize overall connascence by breaking system into encapsulated elements
+    2. Minimize remaining connascence that crosses encapsulation boundaries
+    3. Maximize connascence within encapsulation boundaries
+
+
+
+
+
+--------------------------------------------------------------------
+| 4. ARCHITECTURAL CHARACTERISTICS                                 |
+--------------------------------------------------------------------
+
+- An architectural characteristic
+
+    1. Specifies a nondomain (aka nonfunctional) design consideration
+    2. Influences some structural aspect of the design
+    3. Is critical or important to application success
+
+- Operational Characteristics
+    - Availability
+    - Continuity (disaster recovery capability)
+    - Performance (stress testing, response times, etc)
+    - Recoverability (backups and duplicated hardware)
+    - Reliability/Safety (will people die?)
+    - Robustness (will it keep working if power or internet fails?)
+    - Scalability
+
+- Structural Characteristics
+    - Configurability
+    - Extensibility
+    - Installability
+    - Localization
+    - Maintainability
+    - Portability
+    - Reusability
+    - Supportability
+    - Upgradability
+
+- Cross-Cutting Architectural Characteristics
+    - Accessibility
+    - Archivability
+    - Authentication
+    - Authorization
+    - Legal
+    - Privacy
+    - Security (encryption at rest, encryption in transit, remote access)
+    - Supportability
+    - Usability
+
+- Tradeoffs and Least Worst Architecture
+    - ie Security degrades Performance
+    - Can usually support only a handful of characteristics in one system
