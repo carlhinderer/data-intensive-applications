@@ -238,3 +238,90 @@ IV. Techniques and Soft Skills
 - Tradeoffs and Least Worst Architecture
     - ie Security degrades Performance
     - Can usually support only a handful of characteristics in one system
+
+
+
+
+
+--------------------------------------------------------------------
+| 5. IDENTIFYING ARCHITECTURAL CHARACTERISTICS                     |
+--------------------------------------------------------------------
+
+- Architects uncover architectural characteristics by:
+    1. Extracting from domain concerns
+    2. Extracting from requirements
+    3. Extracting from implicit domain knowledge
+
+- There are several architecture katas websites that are great for practicing 
+    translating domain requirements to architectural priorities.
+
+
+- Examples of translating domain concerns to architectural characteristics   
+
+    Domain Concerns                Architecture characteristics
+    ----------------------------------------------------------------------------
+    Mergers and acquisitions       Interoperability, scalability, adaptability, 
+                                     extensibility
+
+    Time to market                 Agility, testability, deployability
+
+    User satisfaction              Performance, availability, fault tolerance, 
+                                     testability, deployability, agility, security
+
+    Competitive advantage          Agility, testability, deployability, scalability, 
+                                     availability, fault tolerance
+
+    Time and budget                Simplicity, feasibility
+
+
+- Security is an example of an explicit characteristic in every system.  No one wants
+    to create insecure software.  However, it must always be balanced against other
+    priorities.
+
+  Performance is another one.  No one wants to visit a slow website, but performance is
+    a nuanced concept and this must also be balanced against other priorities.
+
+
+- There are no wrong answers in architecture, only expensive ones!
+
+
+
+
+
+--------------------------------------------------------------------
+| 6. MEASURING & GOVERNANCE                                        |
+--------------------------------------------------------------------
+
+- Problems with defining architectural definitions
+    1. They aren't physics
+    2. Wildly varying definitions
+    3. Too composite
+
+- Operational measurements are things that can be measured directly.
+    - Response times
+    - Time until webpage rendering starts
+    - First CPU idle on mobile
+    - Outlier requests that take longer
+    - Statistical analysis that drills down further instead of only looking at mean
+
+- Structural measurements like modularity are harder to measure.
+    - Cyclomatic complexity can be measured by creating a graph of all the function
+        calls and see which classes/functions have too many decision points.
+
+- Process measurements are for things associated with the development process.
+    - Code coverage
+    - Percentage of successful deployments
+    - How long deployments take
+
+- Fitness Function = objective assessment of some architecture characteristic
+    - Check for cyclic dependencies (ie JDepend)
+    - Distance from the main sequence (also JDepend)
+    - Unit tests for architecture keep bad designs out of code base (ie ArchUnit)
+
+- Netflix's Simian Army
+    - Conformity Monkey = checks for architectural governance rules
+    - Security Monkey = checks each service for well-known security defects
+    - Janitor Monkey = looks for instances no service routes to anymore, can be decommed
+    - Chaos Monkey = high latency situations, data centers going down, etc.
+
+- 'The Checklist Manifesto' by Atul Gawande
