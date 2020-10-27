@@ -1,0 +1,135 @@
+--------------------------------------------------------------------
+| CONTENTS                                                         |
+--------------------------------------------------------------------
+
+I. Introduction
+    > 1. Introduction
+
+II. Foundations
+    > 2. Architectural Thinking
+    > 3. Modularity
+    > 4. Architecture Characteristics Defined
+    > 5. Identifying Architectural Characteristics
+    > 6. Measuring and Governing Architectural Characteristics
+    > 7. Scope of Architecture Characteristics
+    > 8. Component-Based Thinking
+
+III. Architecture Styles
+    > 9. Foundations
+    > 10. Layered Architecture Style
+    > 11. Pipeline Architecture Style
+    > 12. Microkernel Architecture Style
+    > 13. Service-Based Architecture Style
+    > 14. Event-Driven Architecture Style
+    > 15. Space-Based Architecture Style
+    > 16. Orchestration-Driven Service-Oriented Architecture
+    > 17. Microservices Architecture
+    > 18. Choosing the Appropriate Architecture Style
+
+IV. Techniques and Soft Skills
+    > 19. Architecture Decisions
+    > 20. Analyzing Architecture Risk
+    > 21. Diagramming and Presenting Architecture
+    > 22. Making Teams Effective
+    > 23. Negotiation and Leadership Skills
+    > 24. Developing a Career Path
+
+
+
+
+
+--------------------------------------------------------------------
+| 1. INTRO                                                         |
+--------------------------------------------------------------------
+
+- 4 Dimensions of architecture
+    1. Characteristics = nonfunctional requirements (ie scalability)
+    2. Structure = style of implementation (ie microservices)
+    3. Decisions = rules for how a system should be constructed (ie only service can access DB)
+    4. Principles = guidelines rather than rules (ie use REST between services)
+
+- Archicture Characteristics
+    - Availability
+    - Reliability
+    - Testability
+    - Scalability
+    - Security
+    - Agility
+    - Fault Tolerance
+    - Elasciticy
+    - Recoverability
+    - Performance
+    - Deployability
+    - Learnability
+
+- Expectations of an Architect
+    1. Make architecture decisions
+    2. Continually analyze the architecture
+    3. Keep current with the latest trends
+    4. Ensure compliance with decisions
+    5. Diverse exposure and expreience
+    6. Have business domain knowledge
+    7. Possess interpersonal skills
+    8. Understand and navigate politics
+
+- Milestones
+    - XP (1996) = agile principles and test-first
+    - 'Continuous Delivery' (2010) = automation, testing, CI, single source of truth
+
+- Architecture Concerns
+    - Requirements
+    - Auditability
+    - Performance
+    - Security
+    - Data
+    - Legality
+    - Scalability
+
+- New Additions to Architecture Discipline
+    - Engineering Practices
+    - DevOps now included
+    - Process
+    - Data (and the increasingly complex set of data options)
+
+- Laws of Software Architecture
+    1. Everything in software architecture is a trade-off.
+    C. If you don't see the trade-off, you haven't discovered it yet.
+    2. Why is more important than how.
+
+
+
+
+
+--------------------------------------------------------------------
+| 2. ARCHITECTURAL THINKING                                        |
+--------------------------------------------------------------------
+
+- Switching from technical depth to breadth is one of the hardest parts of making
+    the transition from a developer to an architect.
+
+- Tradoffs Example
+    - Send message to topic
+                                        Bid Capture
+                                     /
+         Bid Producer ---->  Topic  --  Bid Tracking
+                                     \ 
+                                        Bid Analytics
+
+         A change can be made in a single place and services are decoupled.  However, 
+           the lack of monitoring information exposed makes it harder to auto-scale.  
+           Also, there might be security issues since anyone can subscribe.
+
+    - Send messages to separate AMQP queues
+
+                            Queue ----> Bid Capture
+                         / 
+         Bid Producer ----> Queue ----> Bid Tracking
+                         \
+                            Queue ----> Bid Analytics
+
+         Changes have to be made in multiple places.  Also, we have to send multiple
+           messages if multiple services need to be notified of an event.  But, it 
+           is easier to control subscribers and get monitoring information.
+
+- An architect must do hands-on coding regularly.  It is usually a good idea for them
+    not to be the blocker on a critical change.
