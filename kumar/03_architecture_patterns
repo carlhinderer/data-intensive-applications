@@ -1,3 +1,129 @@
 -----------------------------------------------------------------------
 |  CHAPTER 3 - PATTERNS FOR DATA-INTENSIVE ARCHITECTURE               |
 -----------------------------------------------------------------------
+
+- The Retry Pattern
+
+    attempts_remaining = MAX_ATTEMPTS
+
+    while attempts_remaining > 0:
+        try:
+            connection = connect_to_service()
+            if connection.ok?:
+                break
+            else:
+                attempts_remaining -= 1
+        except TimeoutException:
+            attempts_remaining -= 1
+
+
+    - The application should retry only if there is a clear indication the fault is
+        transient.  If the attempt fails for bad credentials or a bad request, it should not
+        be retried.
+
+
+
+- The Circuit Breaker
+
+    - A circuit breaker will stop requests from flowing to a service if the service becomes 
+        available.  It has the following states:
+
+        1. Closed = the operation is executed normally
+        2. Open = the requests fail immediately and an exception is returned to the application
+        3. Half-Open = used to prevent a recovering service from being hit with a large number
+                         of requests
+
+
+    - The circuit breaker pattern should be implemented asynchronously to offload the logic to 
+        detect failures from the logic to execute the actual operation.  
+
+      This implementation requires some form of persistence (to record the number of successful
+        and unsuccessful executions).  This persistence could be implemented using a distributed
+        cache (memcached or Redis) or a local (in-memory or disk) cache.
+
+
+
+- Throttling
+
+    - Throttling is the process of regulating the rate at which
+        - the publisher publishes messages to the underlying system
+        - an API consumer consumes from the underlying system
+
+    - The idea is to not overload the underlying system, allowing the service to maintain a
+        steady pace when processing multiple customer requests.
+
+
+    - Thottling can be implemented using multiple strategies:
+
+        1. Rejecting requests from an individual user once they have reached their threshold over
+             a period of time
+
+        2. Disabling or degarding the functionality of non-essential services so that essential
+             services can run unimpeded
+
+        3. Using load-leveling to smooth the volume of activity
+
+        4. Defer low-priority operations or tenants
+
+
+
+- Bulk Heads
+
+    - A bulk head is used to cordon off a failing part of the system from the rest of the 
+        system.
+
+    - Physical redundancy is the most common, since traffic can be simply redirected to the
+        live components if one component goes down.  For this reason, bulk heads do add
+        computational overhead.
+
+
+
+- Event-sourcing
+
+    - An 'event source' is a mechanism for storing the current state of data as a stream of
+        events.  Events that happened earlier are stored before events that happened later.
+
+    - This way, we keep a journal of events that can be replayed to arrive at the same state
+        of an object at any time.
+
+    - An 'event' is anything that changes the state of data - a update, delete, or add.  There
+        is always an 'action' associated with an event.  An action in the event-source pattern
+        is called a 'command'.
+
+    - Event-sourcing enables the following capabilities:
+
+        1. Can rebuild the state by re-running the event log
+
+        2. Time-sensitive queries (aka temporal queries) can be used to determine the state of
+             an object at any particular point in time.
+
+        3. Event replay can repair a corrupted state
+
+    - Note that it is expensive to run aggregated queries on an event log.  (Using dedicated 
+        projections from the CQRS pattern could improve this.)
+
+
+
+- Command and Query Responsibility Segregation
+
+    - Within data-intensive systems, reading the data and persisting the data are, and
+        should be, considered 2 separate concerns which should be architected separately.
+
+    - For a read query to be fast, the data should have been indexed appropriately and
+        partitioned properly.  However, different queries might have different indexing
+        concerns, leading to different requirements for reads and writes.
+
+
+    - The way to separate the read and write concerns is to use the architectural pattern
+        known as CQRS.
+
+        1. An update commmand is received from the Presentation Layer.
+
+        2. Validation and update logic is executed, resulting in an update to the Write 
+             Data Store.
+
+        3. (Optionally) The Write Data Store propogates changes to the Read Data Store.
+
+        4. Query Logic reads from the database.
+
+        5. Finally, the Query services update the Presentation Layer.
