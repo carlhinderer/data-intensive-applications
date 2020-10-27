@@ -481,3 +481,56 @@ IV. Techniques and Soft Skills
         [ItemManager] Create item, Display item, Upload item
         [BidManager] Place bids, Display bids, Track bids
     - This is what things like .NET NakedObjects, Java Isis, Rails scaffolding do automatically
+
+
+- Example - Actor/Actions View of Auctions Site
+
+    [Actors]
+
+        - Bidder
+            > View live video stream
+            > View live bid stream
+            > Place a bid
+
+        - Auctioneer
+            > Enter live bids into system
+            > Receive online bids
+            > Mark item as sold
+
+        - System
+            > Start auction
+            > Make payment
+            > Track bidder activity
+
+    [Map Actors and Actions into Components]
+
+        - VideoStreamer
+            > Steams a live auction to users
+
+        - BidStreamer
+            > Steams bids as they occur to the users
+            > Both VideoStreamer and BidStreamer offer read-only views of the auction to the user
+
+        - BidCapture
+            > Captures bids from both auctioneer and bidders
+
+        - BidTracker
+            > Tracks bids and acts as the system of record
+
+        - AuctionSession
+            > Starts and stops an auction
+            > When the bidder ends the auction, performs the payment and resolution steps,
+                including notifying users of ending
+
+        - Payment
+            > Third-party payment processor for credit card payments
+
+
+- Choosing Between Monolithic and Distributed Architectures
+
+    - Monolithic = single deployable unit, typically connected to a single database
+    - Distributed = multiple services running, communicating with network protocols
+
+    - The fundamental decision on which to choose rests on how many quanta are discovered
+        during the design process, and whether the components require different
+        architectural characteristics.
