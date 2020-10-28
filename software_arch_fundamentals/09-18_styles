@@ -1,0 +1,141 @@
+--------------------------------------------------------------------
+| 9. FOUNDATIONS                                                   |
+--------------------------------------------------------------------
+
+- Fundamental Pattern #1: Big Ball of Mud
+
+    - The absence of any discernable architectural structure
+    - Unregulated growth and expedient repair
+    - Problems in deployment, testability, scalability, performance
+
+
+- Fundamental Pattern #2: Unitary Architecture
+
+    - Originally, from the mainframe days, all software ran on a single computer
+    - Today only typically seen in embedded systems and other highly constrained environments
+
+
+- Fundamental Pattern #3: Client-Server
+
+    - 2-tier architecture with several flavors over time
+    - Flavor A: Desktop application that connects to a DB server
+    - Flavor B: Web browser with web server (2-tier even though web server and DB might be separate)
+    - Flavor C: 3-Tier (Industrial grade DB server, application server, client with JavaScript)
+
+    - Java was created during the rise of the 3-tier architecture.  C++ (the dominant 
+        language at the time) developers complained about how difficult it was to move objects 
+        over the network in a consistent way between systems.  So Java built 'serialization' right
+        into the language, providing a 'serialization' interface for each object.  This is rarely
+        used today, and does cause some backwards compatibility issues.
+
+
+- Common Monolithic and Distributed Patterns
+
+    [Monolithic = single deployment unit of all code]
+
+    1. Layered architecture
+    2. Pipeline architecture
+    3. Microkernel architecture
+
+    [Distributed = multiple deployments connected through remote access protocols]
+
+    1. Service-based architecture
+    2. Event-driven architecture
+    3. Space-based architecture
+    4. Service-oriented architecture
+    5. Microservices architecture
+
+
+- The Fallacies of Distributed Computing
+
+    1. The network is reliable.
+         - Timeouts and circuit breakers are used to mitigate issues
+
+    2. Latency is zero.
+         - Should look at mean, and also extremes of response times
+
+    3. Bandwidth is infinite.
+         - Need to think carefully about how much data to return with responses
+
+    4. The network is secure.
+
+    5. The topology never changes.
+         - Architects have to be in constant contact with admins and operations
+
+    6. There is only one administrator.
+
+    7. Transport cost is zero.
+
+    8. The network is homogeneous.
+
+
+- Other Distributed Considerations
+
+    - Distributed logging
+        - Logging consolidation tools like Splunk can help with this
+
+    - Distributed transactions
+        - ACID is not possible
+        - Eventual consistency
+        - High performance, scalability, availability at the expense of data integrity and consistency
+        - Transactional sagas utilize event sourcing to manage the state of a transaction
+        - BASE transactions (Basic Availability, Soft state, Eventual consistency)
+
+    - Contract maintenance and versioning
+
+
+
+
+
+--------------------------------------------------------------------
+| 10. LAYERED ARCHITECTURE STYLE                                   |
+--------------------------------------------------------------------
+
+- This is the de facto style for most applications due to simplicity, familiarity, low cost
+
+- Follows Conway's Law, since most organizations consist of
+    - UI developers
+    - Backend developers
+    - Rules developers
+    - DBAs
+
+- 'Accidental architecture' anti-pattern
+
+- Typical Layers
+    - Presentation Layer
+    - Business Layer
+    - Persistence Layer
+    - Database Layer
+
+- Technically partitioned, rather than domain partitioned
+- Allows developers to leverage their particular technical expertise
+- Lack of overall agility to respond to change
+
+- Each layer can be replaced without affecting other layers, if there are well-defined contracts
+
+- Open vs Closed - If the layers are closed, flow must go through each layer 
+                     (layers cant be skipped)
+
+- 'Architectural Sinkhole' anti-pattern = requests move through layers as pass-throughs without
+     any business logic performed in each layer
+
+- Strengths:
+    - Good for small, simple applications
+    - Good starting point
+    - Low cost, simple, familiar
+    - Ease of development
+    - Lack of network traffic and latency
+
+- Weaknesses:
+    - Gets unruly as it gets bigger
+    - Maintainability
+    - Testability, need to mock and stub components all over the place
+    - Agility
+    - High-risk, infrequent deployments
+    - Not elastic or scalable
+    - Not fault-tolerant
+
+
+
+
+
