@@ -139,3 +139,116 @@
 
 
 
+--------------------------------------------------------------------
+| 11. PIPELINE ARCHITECTURE STYLE                                  |
+--------------------------------------------------------------------
+
+- Best known as the underlying principle behind Unix shell languages like Bash and zsh
+
+- Tools like MapReduce also use this style
+
+- Quanta=1, since it is usually deployed as a monolith
+
+- Pipes = unidirectional communication channels between filters
+- Filters = self-contained, stateless, perform a single task
+
+- 4 Types of Filters
+
+    1. Producer = starting point (aka source)
+    2. Transformer = transforms data and forwards it (aka map)
+    3. Tester = accepts input and produces output based on test criteria (aka reduce)
+    4. Consumer = termination point, may persist to database or display results on UI
+
+- Unidirectional nature and simplicity encourage compositional reuse
+
+- ETL tools leverage the pipeline architecture
+
+
+- Example - Service Telemetry Information Sent From Services via streaming to Kafka
+
+      Kafka  ->  Service Info Capture  ->  Duration Filter  ->  Uptime Filter  ->  End
+      Topic           (producer)               (tester)             (tester)
+                (subscribes to Kafka Topic)       |                    |
+                                                  v                    v
+                                        Duration Calculator     Uptime Calculator
+                                            (transformer)         (transformer)
+                                                      |            |
+                                                      v            v
+                                                     Database Output
+                                                        (consumer)
+                                                             |
+                                                             v
+                                                          MongoDB
+
+
+- Strengths:
+    - Simple and easy to understand, low cost
+    - Lack of network traffic
+
+- Weaknesses:
+    - Still a monolith so deploying and testing are difficult
+    - Not scalable or elastic
+    - Not fault tolerant
+
+
+
+
+
+--------------------------------------------------------------------
+| 12. MICROKERNEL ARCHITECTURE STYLE                               |
+--------------------------------------------------------------------
+
+- Two simple architecture components: a core system and plug-in components
+
+- Example
+    - Core System = Eclipse IDE
+    - Plug-ins = Eclipse plug-ins
+
+- Keep components separate from the main processing flow.  To add a new component,
+    all you have to do is plug in the new component and add it to the registry.
+
+- Plug-in components are standalone, independent components that contain specialized
+    processing, additional features, and custom code meant to enhance or extend the core
+    system.
+
+- Plug-ins should be independent of each other and ideally not have dependencies between
+    them.
+
+- Provides good component decoupling, allows for runtime changes, allows for
+    asynchronous communication (good for UI responsiveness).  Makes deployment difficult
+    while still having the problems of a monolith, and relies too much on the core system,
+    though.
+
+- If a plug-in needs access to the core system's database, it should access the data via
+    the core system through an API.  However, a plug-in may also have it's own data store,
+    either internal or external.
+
+- A plug-in registry contains information about each plug-in module, including it's name,
+    data contract, and remote access protocol details.  The registry could be as simple as 
+    an internal dictionary or as complex as an external system like Apache ZooKeeper.
+
+- The data contract between the plug-ins and core system are usually standard across a
+    domain of plug-ins, and can be implemented as JSON, XML, or events passed between the
+    plug-ins and core system.  Proprietary systems may implement their own contract structure.
+
+- Common implementations of the plug-in architecture include:
+    - IDEs
+    - Web browsers
+    - Tools like Jira and Jenkins
+    - Insurance company software with a separate plug-in for each state
+    - Tax preparation software with a separate plug-in for each state
+
+- Strengths:
+    - Simple and low cost
+    - Can be both domain partitioned and technically partitioned
+    - Good for platforms that require strong feature extensibility
+    - More reliable since problems with a single plug-in won't crash entire system
+    - Good modularity and extensibility
+
+- Weaknesses:
+    - Not scalable, elastic, or fault tolerant
+
+
+
+
+
