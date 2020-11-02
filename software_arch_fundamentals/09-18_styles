@@ -252,3 +252,160 @@
 
 
 
+--------------------------------------------------------------------
+| 13. SERVICE-BASED ARCHITECTURE STYLE                             |
+--------------------------------------------------------------------
+
+- Basic topology is a separately deployed user interface, separately deployed remote
+    coarse-grained services, and a single monolithic database.
+
+
+             --------------------------------------
+             |           User Interface           |
+             --------------------------------------
+              |           |         |           |
+              v           v         v           v
+            Component  Component  Component  Component
+                 |         |          |        |
+                 v         v          v        v
+                -----------------------------------
+                |             Database            |
+                -----------------------------------
+
+
+- Services are 'domain services' which are independently and separately deployed.
+    Since they share a single database, there are typically 4-12 of them.
+
+- In most cases, there is a single instance of each service.  However, there may be
+    multiple instances for scalability or fault tolerance reasons.  If there multiple
+    instances, some kind of load balancing will be needed.
+
+- Typically, services are accessed by the user interface through REST calls, but 
+    messaging, RPC calls, or SOAP may also be used.
+
+- While an API layer consisting of a proxy or gateway can be used to access services from 
+    the user interface (or other external requests), in most cases the user interface 
+    accesses the services directly using a service locator pattern embedded within the 
+    user interface, API gateway, or proxy.
+
+- There may be multiple user interfaces, each connecting to a different service.  There may
+    also be multiple databases, each for different services.  In these cases, we need to 
+    make sure data in one database isn't needed by another service, because we want to
+    avoid any inter-service communication and duplication of data.
+
+
+- It is also possible to add an API layer consisting of a reverse proxy or gateway between
+    the user interface and services.  This can be good for consolidating cross-cutting 
+    concerns such as metrics, security, auditing, service discovery.
+
+                             User Interface
+                            |    |    |    |
+                            v    v    v    v
+                      API Layer (Gateway or Proxy)
+                            |    |    |    |
+                            v    v    v    v
+                          Comp Comp  Comp Comp
+                            |    |    |    |
+                            v    v    v    v
+                                Database
+
+
+- Each individual service is typically designed using a layered architecture.
+
+         API Facade Layer
+         Business Logic Layer
+         Persistence Layer
+
+- For example, a single request ('Checkout') to the 'OrderService' will place an order, 
+    generate an order id, apply the payment, and update the inventory for each item 
+    ordered.  In contrast, in a microservices approach, these steps would involve 
+    several services.
+
+- Because services are coarse-grained, ACID transcations involving commits and rollbacks
+    are used to ensure database integrity within a single service.  In contrast, in a
+    microservices approach, fine-grained services and BASE transactions are used.
+
+
+- For example, for the same request in a microservices architecture,
+
+    1. The 'OrderPlacement' service accepts the request, creates the order, generates an
+         order id, and inserts the order into the order tables.
+
+    2. The order service then makes a call to the 'PaymentService', which tries to apply the
+         payment.  If the payment cannot be applied due to an expired credit card, then 
+         the order cannot be placed and the data is in an inconsistent state.
+
+    3. In this case, what should we do about the inventory?  Should we mark it as ordered and
+         decrement it?  Should we let another customer buy the item?  Should we hold it for
+         some amount of time to let the first customer update their credit card?
+
+
+- Domain services allow for better data integrity and consistency.  However, making a change
+    in any part of the processing requires testing the entire coarse-grained service.
+
+- When multiple services share the same database, schema changes can be difficult to deal with.
+    Typically, this is dealt with by creating a shared data access library used by all the 
+    services.  The problem with this is that every service needs to be redeployed with the
+    new version of the library on every schema change.
+
+- One way to solve this issue is to logically partition the database, create a separate library
+    for each partition, and then you only have to redeploy services that use the schema that
+    changed.
+
+- Strengths:
+    - Security, fault tolerance, and scalability
+    - Agility, testability, and deployability
+    - Domain-partitioned architecture
+    - One service going down won't impact other services
+    - Simple and cheap compared to other distributed architectures
+    - Less network traffic compared to other distributed architectures
+
+- Weaknesses
+    - Quanta=1 if there is only a single DB
+    - Usually only 1 instance of each service, so the individual services aren't fault tolerant
+
+- This is a good choice if you want a measure of fault tolerance and scalability, but
+    don't need the capacity of a microservices approach.  You get ACID transactions, which
+    make the system easy to reason about, as long as you don't outgrow the relational DB.
+
+- Sometimes, the UI or API layer will need to coordinate 2 or more services.  In this case,
+    you'd need to rely on sagas or BASE transactions.
+
+
+- You get a good level of architectural modularity without having to get tangled up in the
+    complexity of more granular services.  As services start getting more fine-grained, issues
+    surrounding orchestration and choreography start to appear.
+
+    Orchestration = coordination of multiple services through the use of a separate mediator
+                      service that controls and manages the workflow of a transaction 
+                      (like the conductor in an orchestra)
+
+    Choreography = coordination of multiple services by which each service talks to one another
+                     without the use of a central mediator (like a dance)
+
+  As services get more fine-grained, both orchestration and choreography are necessary to tie
+    the services together to complete the business transaction.
+
+
+
+
+
+--------------------------------------------------------------------
+| 14. EVENT-DRIVEN ARCHITECTURE STYLE                              |
+--------------------------------------------------------------------
+
+--------------------------------------------------------------------
+| 15. SPACE-BASED ARCHITECTURE STYLE                               |
+--------------------------------------------------------------------
+
+--------------------------------------------------------------------
+| 16. ORCHESTRATION-DRIVEN SERVICE-ORIENTED ARCHITECTURE           |
+--------------------------------------------------------------------
+
+--------------------------------------------------------------------
+| 17. MICROSERVICES ARCHITECTURE                                   |
+--------------------------------------------------------------------
+
+--------------------------------------------------------------------
+| 18. CHOOSING THE APPROPRIATE ARCHITECTURE STYLE                  |
+--------------------------------------------------------------------
