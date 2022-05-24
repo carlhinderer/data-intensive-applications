@@ -1,0 +1,86 @@
+-----------------------------------------------------------------------------
+| CHAPTER 1 - RELIABLE, SCALABLE, MAINTAINABLE APPLICATIONS                 |
+-----------------------------------------------------------------------------
+
+- Book Contents
+
+    [ Single Machine ]
+    1. Reliable, Scalable, Maintainable
+    2. Data Models and Query Languages
+    3. Storage and Retrieval
+    4. Encoding and Evolution 
+
+    [ Distributed Data ]
+    5. Replication
+    6. Partitioning
+    7. Transactions
+    8. Distributed Systems
+    9. Consistency and Consensus
+
+    [ Derived Data ]
+    10. Batch Processing
+    11. Stream Processing
+    12. Future of Data Systems
+
+
+
+- Drivers of big data:
+
+    1. Internet scale
+    2. Business agility
+    3. Open source
+    4. CPU parallelism and faster networks
+    5. Cloud services
+    6. High availability expected
+
+
+- Derived data often occurs in heterogenous systems, where several different data sources need
+    to be integrated.  Batch processing is one approach to dealing with derived data.  Stream
+    processing is another.
+
+
+- Standard building blocks of data-intensive applications:
+
+    1. Database - store data for later
+    2. Cache - remember the result of an expensive operation
+    3. Search index - allow user to search data by keyword
+    4. Stream processing - send a message to another process to be handled asynchronously
+    5. Batch processing - periodically crunch a large amount of accumulated data
+
+
+- If you are using multiple components and need to keep them in sync (ie a memcached cache or a Solr
+    full-text search server), it is typically the application developer's job to keep them in sync.
+
+
+- Data system design tricky questions
+
+    - How does data stay correct even during a fault?
+    - What do you do if parts of the system are degraded?
+    - How do we scale to handle an increase in load?
+    - What does a good API for the service look like?
+
+
+- Most important features in software systems:
+
+    1. Reliability = system should work correctly, even in the face of adversity
+    2. Scalability = should be reasonable ways of dealing with growth
+    3. Maintainability = people should be able to work on the system productively
+
+
+- Sample load parameters used to describe load
+
+    - requests/s
+    - reads/s
+    - writes/s
+    - cache hit rate
+    - amount of data r/w per s
+
+
+- Twitter
+
+    1. Keeps a cache of each user's home timeline
+    2. When a new tweet is created, it is added to each follower's home timeline
+    3. Except when the tweet is from a user with tons of followers, those are cached separately
+
+
+- We should always use abstraction to hide complexity whenever possible.
