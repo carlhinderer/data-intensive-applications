@@ -1,0 +1,156 @@
+-----------------------------------------------------------------------------
+| CHAPTER 2 - DATA MODELS AND QUERY LANGUAGES                               |
+-----------------------------------------------------------------------------
+
+- Historically, data was represented as one big tree (hierarchical model), but that wasn't good for
+    representing many-to-many relationships, so the relational model was invented to solve the
+    problem.
+
+
+- Relational Model
+
+    - Proposed by Edgar Codd in 1970: tuples and relations
+    - Dominant from mid 1980s (mainframes before that)
+    - Transaction processing and batch processing
+    - Abstracted away internal representation of the database
+    - ORMs are used to solve impedence mismatch between SQL and programming language
+    - Foreign keys define relationships between entities
+
+
+- For something like a resume, it makes more sense to store the entire document together as an XML
+    or JSON structure, rather than breaking the data up into tables.  This is a primary use case
+    for document databases.
+
+
+- Using integer idents with no other meaning is useful in relational models, since all other data can
+    change without affecting foreign keys.
+
+
+- There is a tradeoff between the normalized, de-duplicated data approach (faster writes) and the
+    denormalized, duplicated data approach (faster reads).
+
+
+- Document databases do not handle many-to-one or many-to-many relationships well.  You cannot
+    refer to other relations by id.  Support for joins is week (requires multiple queries).
+
+
+- Document vs Relational History
+
+    - IBM Information Management System = hierarchical model, didn't support M:N or joins
+    - Relational model = one solution, took over the world
+    - Network Model (CODASYL) = other solution, stored access paths to other nodes like pointers
+    - Network model is more performant, but makes programming much more difficult
+    - Generations of query optimizers have made relational model much faster
+
+
+- Advantages of Document vs Relational
+
+    - Document = schema flexibility, better performance due to locality, matches some apps naturally
+    - Relational = better support for joins, M:1 and M:N
+    - Depends on application, ie you might never need joins in an analytics app
+    - For highly connected data, document is awkward, relational is OK, graph is best
+    - Document is schema-on-read, relational is schema-on-write
+    - Note that document updates usually require the entire document to be rewritten
+
+
+- Note that the idea of grouping related data together for locality is not limited to the document 
+    model.  For instance, Google's 'Spanner' and Oracle's 'Multi Table Index Cluster' allow you
+    to declare that a table's rows should be interleaved within a parent table.
+
+  The 'column-family' concept in the BigTable data model (used in Cassandra and HBase) has a similar
+    purpose of managing locality.
+
+
+- SQL is declarative, IMS and CODASYL are imperative.
+
+
+- MapReduce Querying
+
+    - Programming model for processing large amounts of data in bulk across many machines
+    - Supported in some NoSQL stores like MongoDB and CouchDB for read-only queries across many docs
+
+    - Example - Generate Report on Shark Sightings with SQL
+
+        SELECT date_trunc('month', observation_timestamp) AS observation_month,
+               sum(num_animals) AS total_animals
+        FROM observations
+        WHERE family = 'Sharks'
+        GROUP BY observation_month;
+
+
+    - Example - MongoDB MapReduce
+
+        db.observations.mapReduce(
+            function map() {
+                var year = this.observationTimestamp.getFullYear();
+                var month = this.observationTimestamp.getMonth() + 1;
+                emit(year + "-" + month, this.numAnimals);
+            },
+            function reduce(key, values) {
+                return Array.sum(values);
+            },
+            {
+                query: { family: "Sharks" },
+                out: "monthlySharkReport"
+            }
+        );
+
+
+    - In this case, the 'map' method would be called once for each document, for example resulting
+        in emit('1995-12', 3) and emit('1995-12', 4).  Then, the reduce function would be called on
+        reduce('1995-12', [3, 4]).
+
+
+- Graph-Like Data Models
+
+    - If you have more and more complex M:N relationships in your data, a graph model may be the best
+        fit.  Graphs consist of the sets of vertices and edges.  Data that can be modeled as graphs
+        includes social networks, the web, and road and rail networks.
+
+    - There are lots of well-known algorithms for graphs.  For instance, a car GPS finds the shortest
+        distance between points and PageRank creates search results rankings.
+
+    - We look at the 'property graph' and 'triple store' models for storing and querying graph data.
+
+
+- Property Graph Model
+
+    - Implemented by Neo4J, Titan, InfiniteGraph
+
+    - Each vertex has:
+        - unique id
+        - set of outgoing edges
+        - set of incoming edges
+        - collection of properties (key/value pairs)
+
+    - Each edge has:
+        - unique id
+        - vertex where edge starts (tail vertex)
+        - vertex where edge ends (head vertex)
+        - label to describe relationship between 2 vertices
+        - collection of properties (key/value pairs)
+
+    - Flexible since any vertices can be connected, traversal is fast, can store different types
+        of relationships in same graph using labels.
+
+
+    - Cypher, created for Neo4J, is a declarative query language for property graphs.
+
+        # Get people named Lucy from Idaho
+        CREATE
+            (NAmerica:Location {name:'North America', type:'continent'}),
+            (USA:Location {name:'United States', type:'country' }),
+            (Idaho:Location {name:'Idaho', type:'state' }),
+            (Lucy:Person {name:'Lucy' }),
+            (Idaho) -[:WITHIN]-> (USA) -[:WITHIN]-> (NAmerica),
+            (Lucy) -[:BORN_IN]-> (Idaho)
+
+
+- We can also write graph queries in SQL, though they are a bit awkward, using recursive common
+    table expressions (the WITH RECURSIVE syntax).
+
+
+- With triple stores (implemented by Datomic and AllegroGraph), all information is stored in 3-part 
+    statements (subject, predicate, object).  For instance, (Jim, likes, bananas).  This approach
+    matches the historical semantic web approach, which tried to automatically parse the content of
+    web pages.  The SparQL query language is used for triple stores.
