@@ -170,3 +170,226 @@
         incrementally.
 
       HBase uses tier-sized, LevelDB and RocksDB used leveled, and Cassandra supports both.
+
+
+
+- B-Trees
+
+    - B-trees (1970) are by far the most widely used indexing structure.  They are the standard 
+        index implementation in almost all relational databases, and many nonrelational ones.
+
+      Like SSTables, BTrees keep key-value pairs sorted by key, allowing for efficient value
+        lookups and range queries.  Otherwise, they are very different.
+
+
+    - The log-structured indexes we saw earlier break the database down into variable-size segments, 
+        typically several MB+ in size, and always write a segment sequentially.
+
+      By contrast, B-trees break the database down into fixed-size blocks or pages, traditionally 4 KB 
+        in size (sometimes bigger), and read or write one page at a time. This design corresponds more 
+        closely to the underlying hardware, as disks are also arranged in fixed-size blocks.
+
+
+    - Each page can be identified using an address, which allows one page to refer to another.  This is
+        similar to pointers, but they are stored on disk.
+
+                    "Look up user_id = 251"
+
+                ref | 100 | ref | 200 | ref | 300 | ref
+                 |           |           |           |
+                 v           v           v           v
+                                 200 <= key < 300
+                                         |
+                                         v
+                              ref | 250 | ref | 260 | ref | 270 | ref
+                                           |
+                                           v
+                                          ...
+
+
+    - One page is designated the root of the B-tree.  Whenever you want to look up a key in the index,
+        you start there.  You keep traversing the tree until you find the key.
+
+      Eventually, we get down to a page containing individual keys (a leaf page), which either contains
+        the value or references to the pages where the values can be found.
+
+      The number of references to child pages on a page is called the 'branching factor'.  (In this 
+        example, it is 4)  It is typically several hundred.
+
+
+    - If you want to update the value for an existing key, search the leaf for the leaf page containing
+        that key, change the value in that page, and write the page back to disk.
+
+
+    - If you want to add a new key, find the page whose range encompasses the new key and add it to
+        the page.  If it's too large, split it into 2 pages.
+
+
+    - This algorithm ensures that the tree always remains balanced.  A B-tree with n keys always has
+        O(lg n) depth.  Most databases can fit into a B-tree that is 3 or 4 levels deep, so you don't
+        have to follow too many page references.
+
+
+
+- Making B-Trees Reliable
+
+    - The basic underlying write is to overwrite a page on disk with new data, unlike LSM-trees which
+        only append to files.  Since this is a hardware operation, things outside of your control
+        can go wrong.
+
+
+    - In order to make the database resilient to crashes, it is common for B-tree implementations to
+        store an additional data structure on disk called a 'Write Ahead Log' ('WAL' or 'redo log').  
+
+      This is an append-only file to which every B-tree modification must be written before it can be
+        applied to the pages of the tree itself.  If the database crashes, this file is used to restore
+        it to a consistent state.
+
+
+
+- Comparing B-Trees and LSM-Trees
+
+    - Generally, LSM-trees are faster for writes, while B-trees are faster for reads.  However, this
+        can vary based on the details for the workload.
+
+    - A B-tree must write every piece of data at least twice (WAL and page), and it has to write an
+        entire page at a time.  We may want to avoid extra writes if we're using SSDs to avoid wearing
+        them out.
+
+    - With LSMs, the compaction process sometimes interferes with reads and writes.  You need 
+        monitoring to ensure your compaction process is keeping up with writes.
+
+    - With B-trees, every key exists in exactly one place in the index.  This aspect makes B-trees
+        attractive in databases that want to provide strong transactional semantics.
+
+
+
+- Secondary Indexes
+
+    - So far, we have only discussed key-value indexes, which are like a primary key index in the
+        relational model.  It's also very common to have 'secondary indexes'.  
+
+      In relational databases, we can define indexes on non-primary-key columns, such as columns used
+        in lookups and foreign key columns.  This is often essential for performant lookups and joins.
+
+
+    - A secondary index can easily be constructed from a key-value index, with the caveat that keys 
+        will not be unique.  This can be solved in 2 ways:
+
+        1. Make each value in the index a list of matching row identifiers (like a full-text index)
+
+        2. Make each key unique by appending a row identifier to it
+
+      Either way, both B-trees and log-structured indexes can be used as secondary indexes.
+
+
+
+- Storing Values Within an Index
+
+    - The key is always the thing that queries search for, but the value can be one of two things: 
+
+        1. The row/document/vertex in question
+        2. A reference to the row stored elsewhere.
+
+
+    - In the case where the row is stored elsewhere, rows are stored in a 'heap file', which store data
+        in no particular order.  This approach is common, because if multiple secondary indexes are
+        present, each can just point to a single coopy of the actual data.
+
+
+    - When updating a value with a new value that is not larger than the old value, we can perform the
+        update in place in the heap file.
+
+      If the new value is larger, we likely need to move it somewhere else in the heap with more space.
+        In this case, we need to update all of the indexes to point at the new location (or a 
+        forwarding pointer is left in the old heap location).
+
+
+    - In some cases, the extra hop from the index to the heap is too much of a performance penalty for
+        reads, so we place a row directly within an index.  This is known as a 'clustered index'.
+
+      A compromise between a clustered index (store all row data in the index) and a nonclustered index
+        (just store a reference to the row) is called a 'covering index' (put some of the tables columns
+        in the index, but not all).
+
+
+
+- Multi Column Indexes
+
+    - The indexes we have used so far only map a single key to a value.  There are also many cases
+        in which we need to query multiple columns of a table simultaneously.
+
+
+    - The most common type of multi-index column is called a 'concatenated index', which simply
+        combines several fields by appending the column values together.
+
+      Note that these indexes depend on order.  This is similar to lookups in a phone book.  You can
+        look up (lastname, firstname) in a phone book, but there is no way to get all the people
+        with a particular firstname using the index.
+
+
+    - Multi-dimensional indexes are a more general way of querying several columns at once, which is
+        particularly important for geospatial data.
+
+        SELECT * FROM restaurants WHERE latitude > 51.4946 AND latitude < 51.5079
+                                    AND longitude > -0.1162 AND longitude < -0.1004;
+
+      A standard B-tree or LSM-tree index can give you all the restaurants in a range of latitudes,
+        or a range of longitudes, but not both.
+
+
+    - One option is to translate a 2D location into a single number using a space-filling curve, then
+        just use a regular B-tree index.
+
+      More commonly, specialized spatial indexes such as R-trees are used.  For example, PostGIS
+        implements geospatial indexes using R-trees along with Postgres's 'Generalized Search Tree'
+        indexing facility.
+
+
+    - There are other interesting applications for multi-dimensional indexes such as searching by
+        color with (r, g, b) or using 2D weather data with (date, temperature).
+
+
+
+- Full Text Search and Fuzzy Indexes
+
+    - All the indexes used so far assume you have the exact key you're querying for.  It doesn't
+        allow you to search for similar keys such as misspelled words.  This 'fuzzy' querying
+        requires different techniques.
+
+
+    - For instance, Lucene can search for words within a certain 'edit distance' (the number of
+        characters different).
+
+      It does this by keeping an in-memory index, which is a finite state automaton over the 
+        characters in the keys, similar to a 'trie'.  This automaton can be transferred into a
+        Levenshtein automaton, which supports efficient search for words within a given edit
+        distance.
+
+
+
+- Keeping Everything in Memory
+
+    - We store things on disk because disks are durable and cheaper.  However, memory keeps getting
+        cheaper, so the cost difference is always eroding.  Sometimes, it makes sense to use an
+        'in-memory database'.
+
+    - For instance, Memcached is intended to be used for caching only, so it's acceptable for data to
+        be lost if a machine restarts.
+
+
+    - Some special systems make in-memory data durable by:
+
+        - Using special hardware like battery-powered RAM
+        - Writing a log of changes to disk
+        - Writing periodic snapshots to disk
+        - Replicating the in-memory state to other machines
+
+
+    - Note that conterintuitively, the performance advantage we get from using in-memory databases
+        is not due to the fact that you don't have to read from disk.  Even in a disk-based storage
+        engine, we may never need to read from disk if we have enough memory, since the O/S caches
+        recently used disk blocks in memory anyways.
+
+      Actually, they are faster because they avoid the overheads of encoding in-memory data structures
+        in a way that can be written to disk.
