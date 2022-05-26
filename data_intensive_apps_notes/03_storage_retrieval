@@ -1,0 +1,172 @@
+-----------------------------------------------------------------------------
+| CHAPTER 3 - STORAGE AND RETRIEVAL                                         |
+-----------------------------------------------------------------------------
+
+- World's Simplest Database
+
+    - Here is the database:
+
+        #!/bin/bash
+
+        db_set () {
+            echo "$1,$2" >> database
+        }
+
+        db_get () {
+            grep "^$1," database | sed -e "s/^$1,//" | tail -n 1
+        }
+
+
+    - To use it:
+
+        $ db_set 42 '{"name":"San Francisco","attractions":["Exploratorium"]}'
+        $ db_get 42
+
+
+    - Appending to our database (append-only log file) is very fast.  Lookups, however, have
+        O(n) performance.
+
+
+    - In order to implement lookups efficiently, we need an index, an additional data structure
+        derived from primary data.  Basically, we keep some metadata on the side which helps locate
+        the data we want.
+
+      Note that maintaining additional structures does increase overhead, especially on writes.
+
+
+
+- Hash indexes
+
+    - Key/value stores are similar to dictionaries in PLs, and are usually implemented as hash maps.
+
+
+    - For instance, we can just keep an in-memory hash map of where every key is mapped to a byte
+        offset in the data file.  Every time we append a new key/value pair to the file, we update
+        the hash map with the new key and offset.
+
+      This is essentially what BitCask (the default storage engine in Riak) does.
+
+
+    - Note that all of the available keys must fit in memory.  This approach is well suited to 
+        applications where the value of each key is updated frequently.
+
+
+    - We also have to solve the problem of running out of disk space if we only ever append to the
+        log.  To solve this, we can break the log into segments and close a file when it reaches
+        a certain size.
+
+      Then, we can use compaction (throw away duplicate keys in the log, only keeping the latest
+        update) on these segments.  This can be done in a background thread while we are able to
+        read and write requests as normal.
+
+
+    - If you want to delete a key/value pair, you have to append a special deletion record (a tombstone).
+        When the log segments are merged, the tombstone tells the merging process to discard any
+        previous values for the key.
+
+
+    - In a crash, the hash map is lost, and all of the log files must be read to restore it.  We can
+        mitigate this by saving periodic snapshots of the hash map to disk.
+
+
+    - Since writes are appended in a strictly sequential order, it is common to have just a single
+        writer thread.  Since data files are append-only and immutable, they can be read concurrently
+        by multiple threads.
+
+
+    - Range queries are not efficient.  In order to scan over all keys 0000-9999, you have to look
+        up each key separately.
+
+
+
+- SSTables and LSM-Trees
+
+    - The first change we make is to keep our segment files sorted by key.  We call this format
+        Sorted String Table, or SSTable.  We also require that each key only appears once in a 
+        segment file (the compaction process already ensures this for multiple files).
+
+
+    - Advantages of this:
+
+        1. Merging segments is simple and efficient with a mergesort-like approach.
+
+        2. No longer have to keep all keys in memory, since we can search through sorted files once we
+             get close to the key.  We still need an in-memory index for some of the keys.
+
+        3. We can compress blocks of key/value pairs to save disk space and reduce I/O if desired.
+
+
+
+- Constructing and Maintaining SSTables
+
+    - Now, we think about how we keep our data sorted by key in the first place.  The approach involves
+        using an in-memory sorted tree structure like a Red-Black Tree or AVL tree.
+
+
+    - So, our storage engine works as follows:
+
+        1. When a write comes in, add it to our in-memory Red-Black tree.  This in-memory tree is
+             sometimes called a 'memtable'.
+
+        2. When a memtable gets bigger than some threshold (ie a few MB), we write it out to disk as
+             an SSTable file.  This can be done efficiently, since we already have the key-value pairs
+             sorted by key in our tree.  The new SSTable file becomes the most recent segment of the
+             database.  While the SSTable is being written out to disk, writes can continue to a 
+             new memtable instance.
+
+        3. In order to serve a read request, first look in the memtable, then the most recent on-disk
+             segment, then the next oldest, etc.
+
+        4. From time to time, run a merging and compacting process on the background to combine
+             segment files.
+
+
+    - One problem here is that if the database crashes, we lose the writes in the current memtable.
+        To solve this problem, we can just keep a separate log on disk we append every write to 
+        immediately.
+
+      It is not sorted, but that doesn't matter, since it's only used for recovery.  We can discard
+        the log every time we write the memtable to disk.
+
+
+
+- Making an LSM-tree out of SSTables
+
+    - This simple algorithm is used by LevelDB and RocksDB, simple key-value storage engine libraries
+        meant to be embedded in other applications.  LevelDB can also be used as a storage engine
+        for Riak.
+
+    - Similar storage engines are used in Cassandra and HBase, both of which were inspired by Google's
+        BigTable paper (which introduced the terms 'SSTable' and 'memtable').
+
+    - Originally this indexing structure was called a 'LSM Tree' (Log-Structured Merge Tree).  We can
+        think of an LSM Tree as the cascade of SSTables that are merged in the background.
+
+
+    - Lucene, an indexing engine for full-text search and used by ElasticSearch and Solr, uses a
+        similar method for storing its 'term dictionary'.  In this case, the key is a search term,
+        and the value is a postings list (list of the ids of the documents that contain the term).
+
+      In Lucene, the mapping from term to postings list is kept in SSTable-like sorted files.
+
+
+
+- Performance Optimizations
+
+    - LSM-tree algorithms can be slow when looking up keys that do not exist in the database, as you
+        have to look through every segment.
+
+      In order to optimize this, storage engines often use additional Bloom filters.  A 'Bloom filter'
+        is a memory-efficient data structure for approximating the content of a set.  It can tell you
+        if a key doesn't appear in the database.
+
+
+    - There are different strategies to determine the order and timing of how SSTables are compacted
+        and merged.  The most common are 'size-tiered' and 'leveled'.
+
+      In size-tiered compaction, newer and smaller SSTables are successively merged into older and
+        larger SSTables.  In leveled compaction, the key range is split up into smaller SSTables
+        and older data is moved into separate levels, which allows compaction to proceed more
+        incrementally.
+
+      HBase uses tier-sized, LevelDB and RocksDB used leveled, and Cassandra supports both.
