@@ -1,0 +1,116 @@
+-----------------------------------------------------------------------------
+| CHAPTER 1 - CORE CONCEPTS                                                 |
+-----------------------------------------------------------------------------
+
+- What is scalability?
+
+    - Handling more data
+    - Handling higher concurrency levels
+    - Handling higher interaction rates
+
+
+
+- Evolution from Single Server to Global Audience
+
+    1. Single-server configuration
+
+         - DNS is paid service provided by hosting company, mapped to server's IP
+         - Single server has DBMS, application stack, static assets
+
+
+    2. Scaling the server vertically
+
+        - Add more I/O capacity by adding hard drives in RAID arrays
+
+        - Improve I/O access times by switching to SSDs 
+            > Note that random r/w 10-100x faster, sequential r/w not much better
+            > Most RDBMS use algorithms for maximizing sequential disk reads
+            > Cassandra uses solely sequential I/O for all writes and most reads
+
+        - Reduce I/O operations by increasing RAM
+        - Upgrade NICs (especially for audio/video content)
+        - More processors/cores
+
+
+    3. Isolation of services
+
+        - Put web server and DB server on separate machines
+        - Can put DNS, FTP, cache, etc. on separate machines
+        - Functional partitioning
+
+
+    4. CDN for static content
+
+        - CDN = hosted service for files like images, JavaScript, CSS, videos
+        - Clients connect to CDN instead of your servers for files
+        - If the CDN doesn't have the requested content, it will download from your servers
+        - Good locality, since big CDN providers are spread across the world
+
+
+    5. Horizontal scalability 
+
+        - Much harder to achieve, need to think about this before building
+        - Run on cheap commodity machines
+        - Use something like Round-robin DNS to distribute traffic among web servers
+
+
+    6. Scalability for a global audience
+
+        - Need global distribution for better user experience and failure recovery
+        - Can use GeoDNS, which resolves name to IP based on location
+        - Can have edge-cache servers located around the world to further reduce latency
+
+
+
+- Overview of Data Center Infrastructure
+
+    1. The front line
+
+        A. Client requests go to GeoDNS to resolve domain names
+
+        B. GeoDNS decides which data center is closer and responds with IP of load balancer
+              (usually strong hardware load balancer)
+
+        C. Traffic gets distributed either to front end cache servers (optional) or front-end web
+              application servers.
+
+
+    2. Web application layer
+
+        - Web application servers responsible for generating the actual HTML of our applications and
+            handling clients' HTTP requests.
+
+        - Usually use lightweight web framework with minimal amount of business logic, since their
+            primary responsibility is rendering the user interface.  Should just handle user
+            interactions and push most business logic to web services layer.
+
+        - Should be completely stateless, so just add more servers to load balancer to scale
+
+
+    3. Web services layer
+
+        - Contains most application logic
+        - Scale by creating functional partitions with specific responsibilities
+        - Communication between front-end applications and web services is usually REST
+        - As long as no shared state, easy to scale
+        - Many webservices are provided stand-alone without a UI in front of them nowadays
+
+
+    4. Additonal components
+
+        - Object cache servers are used to speed up reads by storing precomputed results
+        - Message queues are used for asynchronous processing
+
+
+    5. Data persistence layer
+
+        - Era of polyglot persistence
+        - Often now includes search component
+
+
+
+- Overview of Application Infrastructure
+
+    - Front end = should be presentation only
+    - Web services = SOA, layered, hexagonal, EDA architecture principles
+    - Abstract the data store from other code, so it can be changed if necessary
