@@ -218,3 +218,139 @@
         for fields (which is a third option besides 'required' and 'optional').  This means you
         can change an 'optional' single value to a 'repeated' multi-value.  New code sees the list,
         and old code just sees the last element of it.
+
+
+
+- Avro
+
+    - Apache Avro is a binary encoding format that was started in 2009 as a subproject of Hadoop,
+        since Thrift was not a good fit for their use cases.
+
+
+    - Avro also uses a schema to specify the structure of the data being encoded.  It has 2 schema
+        languages: Avro IDL (for human editing) and a JSON one (more easily machine-readable).
+
+        # Avro IDL Schema
+        record Person {
+            string userName;
+            union { null, long } favoriteNumber = null;
+            array<string> interests;
+        }
+
+        # Equivalent JSON version
+        {
+            "type": "record",
+            "name": "Person",
+            "fields": [
+                {"name": "userName", "type": "string"},
+                {"name": "favoriteNumber", "type": ["null", "long"], "default": null},
+                {"name": "interests", "type": {"type": "array", "items": "string"}}
+            ]
+        }
+
+
+    - Avro doesn't use tag numbers in the schema.  Our example record can be encoded in Avro with
+        32 bytes.  Also, we don't include the data types in the data.  They are inferred from the
+        schema instead.
+
+        length_and_sign    M  a  r  t  i  n
+             0c           4d 61 72 74 69 6e
+
+
+    - This means that the binary data can only be decoded correctly if the code reading the data is
+        using the exact same schema as the code that wrote the data.  Any mismatch would result in
+        incorrectly decoded data.
+
+
+
+- Avro Writer's Schema and Reader's Schema
+
+    - When an application wants to encode some data, it encodes the data using whatever version of
+        the schema it knows about (for example, the one compiled into the application).  This is
+        called the 'writer's schema'.
+
+    - When an application wants to decode some data, it is expecting the data to be in some schema,
+        which is called the 'reader's schema'.
+
+
+    - The writer's schema and reader's schema don't have to the be the same.  They just have to be
+        compatible.  When data is read, the Avro library resolves the differences by looking at
+        the writer's and reader's schemas side-by-side and translating the data from the writer's
+        schema to the reader's.
+
+        1. If the writer's and reader's schemas have the same fields but in a different order, Avro
+             will figure that out and match them up.
+
+        2. If a field is in the writer's schema but not the reader's schema, it is ignored.
+
+        3. If the code reading the data expects some field, but the writer's schema doesn't contain
+             the field, it is filled in with a default value declared in the reader's schema.
+
+
+
+- Avro Schema Evolution Rules
+
+    - With Avro, forward compatibility means the writer schema is newer than the reader.  Backward
+        compatibility means the reader is newer than the writer.
+
+    - To maintain compatibility, you may only add or remove a field that has a default value.
+
+
+    - In Avro, if you want a variable to be allowed to be null, it has to be declared in a union
+        type.
+
+        union { null, long, string }
+
+      Avro doesn't have the 'optional' and 'required' markers like Thrift and Protobuf do.
+
+
+
+- But What is the Writer's Schema?
+
+    - But how does the reader know the writer's schema?  We can't just include the schema with every
+        record, or we'll lose our space savings.
+
+
+    - The answer depends on the context in which Avro is being used.
+
+        1. Large files with lots of records 
+             = Writer can just include the writer's schema once at the beginning of the file
+
+        2. Database with individually written records
+             = Include a version number at the beginning of every encoded record, and keep a list of 
+                 schema versions in your database.  A reader can fetch a record, then fetch the writer's
+                 schema for that version number from the database.
+
+        3. Sending records over a network connection
+             = 2 Processes can negotiate the schema version on connection setup, then use that schema
+                 for the lifetime of the connection.  The Avro RPC protocol works like this.
+
+
+
+- Dynamically Generated Schemas
+
+    - Since Avro doesn't have tag numbers for fields, it is friendlier to dynamically generated 
+        schemas.
+
+
+    - For instance, if we wanted to dump a relational DB into a file, we can fairly easily generate
+        an Avro schema from the relational schema and encode the contents using that schema, dumping
+        it all into an Avro container file.
+
+      If the database schema changes, you can just generate a new Avro schema.  This can be automated.
+
+
+
+- Code Generation and Dynamically Typed Languages
+
+    - Thrift and Protobuf rely on code generation.  After a schema is defined, you can generate code
+        that implements this schema in your PL.  This is useful in statically typed languages, because
+        it allows efficient in-memory structures to be used for decoded data, and allows type checking
+        and autocompletion in IDEs.
+
+    - In dynamically typed languages, there isn't much of a point in generating code, since there is
+        no compile-time checker to satisfy.  In these languages, code generation is an unwelcome
+        compliation step.
+
+    - Avro provides code generation for statically typed languages, but it can be used without any
+        code generation also.
