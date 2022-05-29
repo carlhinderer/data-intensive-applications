@@ -1,0 +1,128 @@
+-----------------------------------------------------------------------------
+| CHAPTER 4 - ENCODING AND EVOLUTION                                        |
+-----------------------------------------------------------------------------
+
+- Encoding and Evolution
+
+    - Changing an application's features often leads to a change in the data that is stored.
+        Relational databases assume all the data conforms to one schema, and the schema can
+        be changed with migrations (ie ALTER statements).  There is always exactly one schema.
+
+    - Schema-on-read databases don't enforce a schema, so the database can contain a mixture of 
+        older and newer data formats written at different times.
+
+
+    - When a schema changes, a corresponding change to application code also needs to happen.
+        However, in a large application, this might not happen instantaneously.
+
+        1. With server-side applications, you may want to perform a rolling upgrade.
+        2. With client-side applications, the user will upgrade whenever they feel like it.
+
+
+    - Since old and new versions of code, and potentially old and new data formats, may all exist
+        in the system at the same time, we need to maintain compatibility in both directions.
+
+        Backward compatibility = newer code can read data written by older code
+        Forward compatibility = older code can read data written by newer code
+
+      Backward compatibility is relatively straightforward, since you know the old data format.
+        Forward compatibility can be trickier, since it requires older code to ignore changes
+        made by newer versions.
+
+
+
+- Formats for Encoding Data
+
+    - Programs usually work with data in at least 2 different representations:
+
+        1. In memory, data is kept in structs, lists, arrays, hash tables, etc.  These data structures
+             are optimized for efficient access and manipulation by the CPU (typically using pointers).
+
+        2. When we want to write data to a file or send it over the network, you have to encode it as
+             some kind of self-contained sequence of bytes (ie a JSON document).
+
+
+    - So, we need some kind of translation between the 2 representations.  The translation from an 
+        in-memory representation to a byte sequence is called 'encoding' (aka serialization or
+        marshalling).  
+
+      The reverse is called 'decoding' (aka parsing, deserialization, unmarshalling).
+
+
+
+- Language-Specific Formats
+
+    - Many programming languages come with built-in support for encoding in-memory objects into byte
+        sequences.
+
+        - Java has 'java.io.Serializable'
+        - Ruby has 'Marshal'
+        - Python has 'pickle'
+
+      There are many third party libraries also.
+
+
+    - There encoding libraries are very convenient, because they allow in-memory objects to be saved
+        and restored with minimal additional code.  They have deep problems however:
+
+        1. The encoding is tied to one PL, and can't be read by another PL.
+
+        2. In order to restore data, the decoding process needs to be able to execute arbitrary
+             classes, which can be a security risk.
+
+        3. Versioning data is often an afterthought, making forwards and backwards compatibility
+             difficult.
+
+        4. Efficiency is an afterthought, and built-in serialization is known for bad performance.
+
+
+
+- JSON, XML, and CSV
+
+    - JSON, XML, and CSV are text formats, so they're somewhat human-readable.  They are flexible
+        and good enough for most purposes.  However, they do have some problems:
+
+        1. There is a lot of ambiguity around the encoding of numbers.  JSON doesn't distinguish
+             between integers and floating points, and encoding very large numbers requires hacks.
+
+        2. JSON and XML have good support for Unicode strings, but don't support binary strings
+             (sequences of bytes without a character encoding).  Binary strings are useful, so
+             people encode them with Base64, which is hacky and increases the data size.
+
+        3. There is optional schema support for JSON and XML.  They are powerful, and somewhat
+             complicated to learn and use.  XML schemas are widely used, JSON not as much.
+             If a schema is not used, the decoding logic must be hard-coded into the application.
+
+        4. CSV doesn't have any schema, and data problems can arise from the separator.
+
+
+
+- Binary Encoding
+
+    - For data that is only used within your organization, there is less pressure to use a common
+        standard.  You could choose a format that is more compact or faster to parse.  For TB-sized
+        datasets, the encoding can make a big difference.
+
+    - JSON is less verbose than XML, but both use a lot of space compared to binary formats.  This
+        has led to a profusion of binary encodings for JSON (MessagePack, BSON, BISON, Smile, etc.)
+        and for XML (WBXML, Fast Infoset, etc.).  None of these are as widely adopted as the textual
+        formats.
+
+
+    - Here is an example record that we'll encode in several binary formats:
+
+        {
+            "userName": "Martin",
+            "favoriteNumber": 1337,
+            "interests": ["daydreaming", "hacking"]
+        }
+
+
+    - Here is part of the MessagePack encoding for the record:
+
+        object   string         userName            string       Martin
+          83       a8    75 73 65 72 4e 61 6d 65      a8    4d 61 72 74 69 6e
+
+      The MessagePack binary encoding is 66 bytes long, only a little less than the 81 bytes taken
+        by the textual JSON (with the whitespace removed).
+        
