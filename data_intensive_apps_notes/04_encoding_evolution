@@ -354,3 +354,173 @@
 
     - Avro provides code generation for statically typed languages, but it can be used without any
         code generation also.
+
+
+
+- The Merits of Schemas
+
+    - Many data systems also implement some kind of proprietary binary encoding for their data.  For
+        example, most relational DBs have a network protocol over which you send queries and get
+        responses.
+
+      These protocols are specific to  a particular database, and the database vendor provides a 
+        driver (ie using the ODBC or JDBC APIs).  The driver is used to decode the responses from
+        the database into in-memory data structures.
+
+
+    - Advantages of schemas:
+
+        1. Can be much more compact by omitting field names
+        2. Schema is form of documentation
+        3. Keeping a database of schemas allows you to check forward and backward comatibility
+        4. Code generation for statically typed languages
+
+
+
+- Modes of Dataflow
+
+    - The Most Common Methods of Dataflow
+
+        1. Dataflow through databases
+        2. Dataflow through services (REST and RPC)
+        3. Message Passing Dataflow
+
+
+
+- Dataflow Through Databases
+
+    - In a database, the process that writes to the database encodes the data, and the process that
+        reads the database decodes it.  
+
+      It could just be the same process reading and writing the data, in which case you are sending 
+        a message to your future self.
+
+
+    - Forward compatibility is often required since we want to do rolling updates.  An older, still
+        running version of the code will have to read data created by the newer version of the code.
+
+      If older code encounters a new field it doesn't know about, it should just ignore it and leave
+        it alone instead of overwriting it.
+
+
+    - Rewriting (migrating) data into a new schema is expensive on a large dataset, so most databases
+        avoid it if possible.
+
+      In a relational database, you can add a column with a 'null' default value.  When an old row
+        is read, the database fills in nulls for any columns that are missing from the encoded data
+        on disk.  
+
+
+
+- Dataflow Through Services - REST and RPC
+
+    - Web browsers, native apps running on mobile devices, and desktop applications are the most
+        common service clients.
+
+    - A client-side JavaScript application running inside a web browser can use XmlHttpRequest to
+        become an HTTP client (this is known as AJAX).  In this case, the server's response is
+        typically not HTML, but rather encoded data such as JSON.
+
+    - When a service is implemented using HTTP, it is called a 'web service'.  REST and SOAP are
+        the most popular approaches to web services.  
+
+    - Before the rise of web services, there were many standards for RPC, which tried to make a
+        request to a remote network service look the same as calling a local function in your PL.
+        This approach had serious problems, like difficulty in dealing with failures and timeouts,
+        duplicated data, and an awkward programming model.
+
+
+
+- Current Directions for RPC
+
+    - There is a new generation of RPC frameworks being built on top of the encodings mentioned in
+        this chapter.  
+
+        - Thrift and Avro come with RPC support included
+        - gRPC is an RPC implementation using Protobuf
+        - Finagle uses Thrift
+        - Rest.li uses 
+
+
+    - This new generation of RPC frameworks is more explicit about the fact that a remote request is
+        different from a local function call.
+
+      For example, Finagle uses 'futures' (aka 'promises') to encapsulate asynchronous actions that
+        may fail.  Futures also simplify situations where you need to make requests to multiple
+        services in parallel and combine their results.
+
+      gRPC uses 'streams', where a call consists of not just one request and one response, but a 
+        series of requests and responses over time.
+
+
+
+- Message-Passing Dataflow
+
+    - 'Asynchronous message-passing systems' are somewhere between RPC and databases.  Like with RPC,
+        a client's request ('message') is delivered to another process with low latency.
+
+      As with databases, the message is not sent via direct network connection, but to an intermediary
+        ('message broker' or 'message queue'), which stores it temporarily.
+
+
+    - Using a message broker has several advantages over direct RPC:
+
+        1. It can act as a buffer if the recipient is unavailable or overloaded.
+
+        2. It can automatically try to redeliver failed messages.
+
+        3. It avoids the sender needing to know the IP address and port number of the recipient.
+
+        4. It allows one message to be sent to several recipients.
+
+        5. It logically decouples the sender from the recipient.
+
+
+
+- Message Brokers
+
+    - In the past, the landscape of message brokers was dominated by commercial enterprise software
+        from companies such as TIBCO, IBM WebSphere, and webMethods.
+
+      More recently, open source implementations such as RabbitMQ, ActiveMQ, HornetQ, NATS, and
+        Apache Kafka have become popular.
+
+
+    - Delivery semantics vary by implementation and configuration, but in general, message brokers are
+        used as follows:
+
+        1. One process sends a message to a named 'queue' or 'topic'.
+
+        2. The broker ensures the message is delivered to one or more 'consumers' or 'subscribers' to 
+             that queue or topic.
+
+        3. There can be many producers and many consumers on the same topic.
+
+
+    - A topic provides a one-way dataflow.  However, a consumer may itself publish messages to other
+        topics, or to a reply queue to send a message back to the original sender.
+
+
+
+- Distributed Actor Frameworks
+
+    - The 'actor model' is a programming model for concurrency in a single process.  Rather than
+        dealing with threads (and the associated problems of race conditions, locking, and deadlock),
+        logic is encapsulated in 'actors'.
+
+      Each actor represents one client or entity, may have some local state, and communicates with
+        other actors by sending asynchronous messages.  Message delivery is not guaranteed, in certain
+        error conditions, messages will be lost.
+
+      Since each actor processes only message at a time, it doesn't need to worry about threads,
+        and each actor can be scheduled independently by the framework.
+
+
+    - In 'distributed actor frameworks', this model is used to scale an application across multiple
+        nodes.  The same message-passing mechanism is used.
+
+      Essentially, a distributed actor framework essentially integrates a message broker and the
+        actor programming model into a single framework.
+
+
+    - Popular distributed actor frameworks include Akka, Orleans, and Erlang OTP.
