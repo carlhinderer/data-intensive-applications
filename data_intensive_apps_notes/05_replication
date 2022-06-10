@@ -139,3 +139,138 @@
              Postgres for instance).
 
         4. Once the follower has processed all changes, it has caught up.
+
+
+
+- Handling Node Outages
+
+    - If a follower crashes or is restarted, or their connection to the leader is temporary lost,
+        the follower can recover quite easily.  They know from their log the last transaction they
+        processed, and can just request the changes since that point when they are reconnected to the
+        leader.
+
+
+    - Handling a leader failure is trickier.  One of the followers needs to be promoted to the leader,
+        and clients and followers need to know who the new leader is.  The 'failover' process looks
+        like this:
+
+        1. Determining that the leader has failed.  Maybe this happens if it stops responding for 30
+             seconds.
+
+        2. Choosing a new leader.  This could be done via an election process or by some controller
+             node.
+
+        3. Reconfigure the system to use the new leader.  Clients need to send write requests to the 
+             new leader.  Followers need to know who the new leader is.  If the dead leader comes back
+             online, it needs to know it's not the leader any more.
+
+
+    - Failover is frought with things that can go wrong:
+
+        1. If asynchronous replication is used, the new leader might not have gotten all the writes
+             from the original leader.  If the old leader rejoins the cluster, what should happen to
+             those writes?  We could choose to simply discard them, but this might violate durability
+             guarantees.
+
+        2. What if discarding writes leads to some other downstream problem.  For instance, if they
+             cause a SQL DB's auto-incrementing primary keys to be off?
+
+        3. If 2 nodes both believe they are the leader ('split brain'), they might both be accepting
+             writes with no way to resolve conflicts.  Some systems will actually shut down if 2
+             leaders are detected.
+
+        4. What is the right timeout before a leader is declared dead?  If the system is just slow
+             due to network problems, an unnecessary failover is going to make things worse.  For this
+             reason, many teams prefer to perform failovers manually even if an automated way is
+             possible.
+
+
+
+- Implementation of Replication Logs
+
+    - Statement-Based Replication
+
+        - In the simplest case, the leader logs every write request (statement) that it executes, and
+            sends that statement log to its followers.  In a relational DB, this means that every
+            INSERT, UPDATE, and DELETE statement is forwarded to followers.
+
+
+        - Problems:
+
+            1. Nondeterministic functions like 'NOW()' or 'RAND()' will generate a different value on
+                 each replica.
+
+            2. Auto-incrementing columns will probably generate different values.
+
+            3. Statements with side effects (ie triggers or stored procedures) may result in different
+                 side effects on each replica.
+
+
+        - Used to be used by old versions of MySQL.  VoltDB uses it safely by requiring transactions
+            to be deterministic.
+
+
+
+    - Write-Ahead Log (WAL) Shipping
+
+        - In Chapter 3, we discussed how every write is usually appended to a log:
+
+             1. With SSTables, the log itself
+             2. With B-Trees, every modification is first written to a Write-Ahead Log
+
+
+        - In either case, the log is an append-only sequence of bytes containing all writes to the
+            database.  We can just send this entire log to followers, and they can build a copy
+            of the exact same data structures as the leader.
+
+
+        - This method is used by Postgres and Oracle, among others.
+
+
+        - The main disadvantage is that the log describes the data on a very low level: which bytes
+            changed an on which disk blocks.  This means replication is very closely coupled to the
+            storage engine.  If a new version of the database is released, upgrading it might
+            require downtime.
+
+
+
+    - Logical (Row-Based) Replication
+
+        - Another options is to use different log formats for replication and storage, which decouples
+            the storage internals.  This kind of replication log is called a 'logical log' to 
+            distinguish it from the physical data representation.
+
+
+        - A logical log for a relational DB is usually a sequence of records describing database writes
+            to tables at the granularity of a row.
+
+            1. For an inserted row, all columns are contained.
+
+            2. For a deleted row, just the information to identify the row are included.
+
+            3. For an updated row, need the identifying information and the values of changed columns.
+
+
+        - This method can more easily be kept backwards compatible, and this format is easier for
+            external applications to parse.  This is useful if you want to send the contents of the
+            database to an external system like a data warehouse (a technique called 'change data
+            capture').
+
+
+
+    - Trigger-Based Replication
+
+        - All of the methods so far are implemented by the database system, without involving any
+            application code.  You might need application code, for instance, if you only want to
+            replicate a subset of the data, need to do some kind of translation, or need some kind of
+            conflict resolution.
+
+
+        - Some tools like Oracle GoldenGate make changes available to an application by reading the
+            database log.
+
+
+        - Another option is to use triggers and stored procedures that can log changes to another table,
+            to be read by external processes.  'Databus' for Oracle and 'Bucardo' for Postgres work
+            like this.  This approach has high overhead but allows for maximum flexibility.
+            
