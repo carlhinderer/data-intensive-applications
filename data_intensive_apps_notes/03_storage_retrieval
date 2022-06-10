@@ -183,7 +183,6 @@
         philosophy as opposed to the append-only philosophy.
 
 
-
     - The log-structured indexes we saw earlier break the database down into variable-size segments, 
         typically several MB+ in size, and always write a segment sequentially.
 
@@ -322,7 +321,7 @@
         in which we need to query multiple columns of a table simultaneously.
 
 
-    - The most common type of multi-index column is called a 'concatenated index', which simply
+    - The most common type of multi-column index is called a 'concatenated index', which simply
         combines several fields by appending the column values together.
 
       Note that these indexes depend on order.  This is similar to lookups in a phone book.  You can

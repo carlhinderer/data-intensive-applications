@@ -1,0 +1,141 @@
+-----------------------------------------------------------------------------
+| CHAPTER 5 - REPLICATION                                                   |
+-----------------------------------------------------------------------------
+
+- Reasons to Distribute a Database Across Multiple Machines
+
+    1. Scalability
+    2. Fault tolerance & High availability
+    3. Latency (especially for global audience)
+
+
+
+- Scaling to Higher Load
+
+    - In a 'shared-memory architecture', we just add a lot of CPUs and memory to a single machine.  This
+        approach will eventually hit practical limits.
+
+
+    - In a 'shared-disk architecture', several machines share the same disk cluster, connected via a
+        fast network.  This approach is used for some data warehousing workloads, but contention and
+        the overhead of locking limit the scalability of this approach.
+
+
+    - With a 'shared-nothing architecture', each machine is called a 'node'.  Any coordination between
+        nodes is done at the software level, using a conventional network.
+
+
+
+- Replication vs Partitioning
+
+    - There are 2 common ways data is distributed across multiple nodes: replication and partitioning.
+
+
+    - 'Replication' is keeping a copy of the same data on several different nodes, potentially in
+        different locations.  Replication provides redundancy and can also help improve performance.
+
+
+    - 'Partitioning' is splitting a big database into smaller subsets called 'partitions' so that
+        different partitions can be assigned to different nodes (aka 'sharding').
+
+
+
+- Resons to Replicate Data
+
+    1. Keep data geographically close to users (to reduce latency)
+
+    2. To allow system to continue working through node failures (to increase availability)
+
+    3. Scale out number of machines that can serve read throughput (to increase read throughput)
+
+
+
+- Leaders and Followers
+
+    - In this chapter, we'll assume we have a dataset that can fit entirely on one machine.  Each
+        node that stores a copy of the database is called a 'replica'.
+
+
+    - Every write to the DB needs to be processed by every replica.  The most common solution for this
+        is called 'leader-based replication' (aka 'active/passive' or 'master-slave replication').
+
+        1. One of the replicas is designated the 'leader' (aka the 'master' or 'primary').  When clients
+             want to write to the DB, they must send their requests to the leader, which first writes
+             the data to it's local storage.
+
+        2. The other replicas are known as 'followers' (aka 'read replicas', 'slaves', 'secondaries',
+             'hot standbys').  Whenever the leader writes new data to its local storage, it also sends
+             the data changes to each of its followers as part of a 'replication log' or 'change stream'.
+
+           Each follower takes the log from the leader and updates its local copy accordingly, by 
+             applying the writes in the same order.
+
+        3. When a client wants to read from the database, it can query any of the followers.
+
+
+    - This mode of replication is a built-in feature of many relational databases, such as Postgres,
+        MySQL, Oracle, and SqlServer.  It is also used by nonrelational databases (like MongoDB and
+        Espresso) and distributed message brokers (Kafka and RabbitMQ High Available Queues).
+
+
+
+- Synchronous Versus Asynchronous Replication
+
+    - An important detail is whether replication happens synchronously or asynchronously.  (In relational
+        DBs, this is often configurable).
+
+
+    - With 'synchronous' replication, the leader waits until a follower has confirmed it received the
+        write before reporting success to the user and making the write visible to other clients.
+
+
+    - With 'asynchronous' replication, the leader sends the message to the follower, but doesn't wait
+        for a response.
+
+
+    - The advantage of synchronous replication is that the follower is guaranteed to have an up-to-date
+        copy of the data that is consistent with the leader.  If the leader suddenly fails, we still
+        have the data on any follower.
+
+      The disadvantage is that if a synchronous follower doesn't respond, the leader must block all
+        writes to wait for it to be available again.
+
+
+    - For the latter reason, it is impractical for all followers to be synchronous.  Any one node 
+        outage grinds the system to a halt.  In practice, if you enable synchronous replication, it
+        means that one of the followers is synchronous and the others are asynchronous.  If the
+        synchronous follower stops responding, one of the other asynchronous followers becomes the
+        synchronous one.  This configuration is sometimes called 'semi-synchronous'.
+
+
+    - Often, leader-based replication is configured to be completely asynchronous.  In this case, if the
+        leader fails, any writes that have not been replicated are lost.  This means that a write
+        is not guaranteed to be durable, even if it is confirmed to the client.
+
+      However, the system can keep procesing writes even if all of it's followers have fallen behind.
+        This might seem like a bad trade off, but it is widely used.
+
+
+
+- Setting Up New Followers
+
+    - From time to time you need to set up new followers, perhaps to increase the number of replicas
+        or replace failed nodes.  To get the new follower a copy of the leader's data, copying files
+        is usually not sufficient, because we won't be getting the changes that are accumulating.
+
+
+    - We could lock the database to make a copy, but we don't want the downtime.  Instead, we use this
+        process:
+
+        1. Take a consistent snapshot of the leader's database at some point in time.  We should be
+             able to do this without locking the database, since this feature is also required for
+             taking backups.
+
+        2. Copy the snapshot to the new follower node.
+
+        3. The follow connects to the leader and requests all changes that have occurred since the
+             snapshot was taken.  This requires knowing the exact position where the snapshot was
+             taken in the leader's replication log (this is known as the 'log sequence number' in
+             Postgres for instance).
+
+        4. Once the follower has processed all changes, it has caught up.
