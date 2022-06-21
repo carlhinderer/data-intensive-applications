@@ -1,0 +1,138 @@
+-----------------------------------------------------------------------------
+| CHAPTER 2 - PRINCIPLES OF GOOD SOFTWARE DESIGN                            |
+-----------------------------------------------------------------------------
+
+- Simplicity
+
+    - Hide complexity and build abstractions
+    - Avoid overengineering - YAGNI
+    - Try TDD
+    - Learn from other models of simplicity in software design (ie web and data processing frameworks)
+
+
+
+- Loose Coupling
+
+    - Keep coupling between parts of the system as low as possible
+    - High coupling means you have to change lots of things at the same time
+
+    - Promoting Loose Coupling
+        > Carefully manage your dependencies between classes, modules, applications
+        > Private methods in some languages let you hide implementation
+        > Use clean interfaces at higher levels
+        > Need to avoid circular dependencies (dependency graph should be a DAG)
+
+    - Great decoupling example = Unix stdin/stdout (can be terminal, file, socket, another process...)
+
+
+
+- Don't Repeat Yourself (DRY)
+
+    - Reasons Developers Waste Time
+        > Following inefficient process (meetings, paperwork, etc.)
+        > Lack of automation
+        > Reinventing the wheel
+        > Copy/paste programming = not DRY
+        > Quick hacky solutions build up tech debt
+
+    - Design patterns are abstract ways of solving common problems
+    - Shared libraries can help keep things DRY
+    - Web services can help by abstracting things away
+
+
+
+- Coding to Contract
+
+    - By creating explicit contracts, you abstract away the things clients don't need to know
+    - Contract = signature for method, public interface for class, API specification for service
+    - As long as contract is in place, providers and clients can be modified independently
+
+
+
+- Draw Diagrams
+
+    - Always draw diagrams of a system before you start implementing it.
+    - Use case diagrams define the users of a system and the actions they want to perform.
+    - Class diagrams present the structure of individual modules.
+    - Module diagrams focus on the relationship between larger parts of the system.
+
+
+
+- Single Responsibility
+
+    - Components should have one single responsibility and no more
+    - Makes code easier to refactor, reuse, and unit test
+
+    - Ways to promote SRP:
+        > Keep class length to < 2-4 screens
+        > Ensure class depends on <= 5 other classes
+        > Ensure each class has a specific goal/purpose
+        > Should be able to summarize with one sentence
+
+    - Strategy, Iterator, Proxy, and Adapter patterns can help
+
+
+
+- Open-Closed Principle
+
+    - Classes should be open for extension and closed for modification
+
+    - Open-Closed Example
+        > You need to sort an array of Employee objects
+        > You put all code for this in EmployeeArraySorter class
+        > Then, later you need to sort an array of city objects, but you don't have reusable code
+        > What you need is to refactor to make open-closed compliant
+
+        > Create single interface for comparing 2 objects called Comparator
+        > Create single interface for sorting objects called Sorter
+        > Specific implementations can now use these interfaces with very little new code
+
+    - Another example = MVC frameworks allow you to modify default behavior without modifying framework
+
+
+
+- Dependency Injection
+
+    - Dependency injection provides references to objects that the class depends on, instead of
+        allowing the class to gather the dependencies itself.
+
+    - Client provides instance of dependencies at class instantiation time.
+    - Reduces local complexity of classes by making them dumber.
+    - Just a reorganization of the same code, does not require any specific framework
+
+
+
+- Inversion of Control (IoC)
+
+    - Dependency injection is a subclass of a broader principle called 'Inversion of Control', which
+        is a method of removing responsibilities from a class to make it simpler and less coupled
+        from the rest of the system.
+
+    - Your classes don't need to know when their instances are created, who is using them, or how
+        their dependencies are put together.
+
+    - Components of a good IOC framework:
+        > You can create plugins for your framework
+        > Each plugin is independent and can be added or removed at any time
+        > Your framework can auto-detect these plugins, or there is a way of configuring them
+        > Your framework provides an interface not coupled to the plugins themselves
+
+
+
+- Designing for Scale
+
+    - 3 Basic Scalability Techniques:
+        1. Adding more clones (works best with stateless services)
+        2. Functional partitioning
+        3. Data partitioning
+
+
+
+- Design for Self-Healing
+
+    - Systems should be highly available
+    - The larger you scale out, the more fault tolerance occurs
+    - Should try to test failure scenarios as much as possible
+    - Single points of failure are bad, redundancy is the solution
+    - Self-healing systems handle failures without human intervention
+    - Want to minimize the 'mean time to recovery' after a failure

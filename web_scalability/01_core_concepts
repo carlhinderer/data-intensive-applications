@@ -4,9 +4,14 @@
 
 - What is scalability?
 
+    - Scalability = ability to adjust capacity of system to cost-effectively fulfill demands
+
     - Handling more data
     - Handling higher concurrency levels
     - Handling higher interaction rates
+
+    - Need to scale organizational structures as well.  Having more than 8-15 people on a single
+        team becomes inefficient as communication overhead grows.
 
 
 
@@ -52,13 +57,19 @@
         - Much harder to achieve, need to think about this before building
         - Run on cheap commodity machines
         - Use something like Round-robin DNS to distribute traffic among web servers
+        - True horizontal scalability is difficult and expensive
+        - Start with easy things like web servers and caches, then move to databases and persistence
 
 
     6. Scalability for a global audience
 
         - Need global distribution for better user experience and failure recovery
         - Can use GeoDNS, which resolves name to IP based on location
+
         - Can have edge-cache servers located around the world to further reduce latency
+            > Edge cache = HTTP cache server located near the customer
+            > Requests from customer's browser go to edge cache server
+            > Server decides to assemble page from cache, send requests to your web servers, or delegate
 
 
 
@@ -111,6 +122,20 @@
 
 - Overview of Application Infrastructure
 
+    - Architecture should always revolve around the business model (domain-driven design)
+
     - Front end = should be presentation only
+
     - Web services = SOA, layered, hexagonal, EDA architecture principles
+        > SOA = loosely coupled and highly autonomous services
+        > Layered = each layer can only depend on layers below it
+        > Hexagonal = business logic is the center and all other systems revolve around it
+        > EDA = react to events instead of request/response
+
     - Abstract the data store from other code, so it can be changed if necessary
+
+    - Purpose of architecture: 
+        > Build higher abstractions that hide complexity
+        > Limit dependencies
+        > Allow you to scale each part independently
+        > Make parallel development of different parts practical
