@@ -184,3 +184,206 @@
              (More copies of the same thing)
 
         3. Your customer database is sharded on user id.  (Data partitioning)
+
+
+
+- ACID Transactions
+
+    - 'ACID Transactions' refers to a set of properties supported by most relational DB engines.
+
+        Atomiticy   = A transaction is executed in its entirety.  It either completes or rolls back.
+
+        Consistency = Every transaction transforms the data from one consistent state to another,
+                        with data conforming to all constraints enforced by the schema.
+
+        Isolation   = Transactions run in parallel without affecting one another.
+
+        Durability  = Data is persisted, so it cannot be lost even due to server failure.
+
+
+
+- Scaling with NoSQL
+
+    - We have used relational databases for decades, and were taught to use data normalization and
+        ACID transactions.  They were the only option.  If you needed a large database, you needed
+        expensive servers and software licenses.
+
+    - In the 2000s, a series of groundbreaking white papers from the large web companies started to
+        change this mindset.  Google's 'Google File System', 'MapReduce', 'BigTable', and Amazon's
+        'Dynamo' are notable examples.
+
+    - By 2010, these principles and design decisions had made their way into open source data stores
+        like Cassandra, Redis, MongoDB, Riak, and CouchDB.  These technologies were build with
+        scalability in mind from the ground up.
+
+    - To determine whether you can use any of these options, you need to think carefully about what
+        data guarantees you need and don't need.  Then, you can make the right tradeoffs when 
+        picking a solution.
+
+
+
+- CAP Theorem
+
+    - Eric Brewer said in 1999 that any distributed data store can only provide 2 of the following 3:
+
+        Consistency = Every read receives the most recent write or an error
+                        (Note this is different from the relational idea of consistency, which
+                           is focused on data constraints like foreign keys and uniqueness)
+
+        Availability = Every request receives a non-error response
+
+        Partitioning = The system continues to operate despite an arbitrary number of messages being
+                         dropped by the network between nodes
+
+
+    - For instance, if all available nodes need to be process incoming requests (availability),
+        and they all need to return the same data (consistency), then they cannot tolerate a
+        network failure since they cannot propogate changes to other nodes.
+
+    - In reality, there are ways to tune both consistency and availability to get the tradeoffs we
+        want, and it's more complicated than 'pick 2 out of 3'.  Brewer's 2012 paper 'CAP 12 Years
+        Later' addresses this detail.
+
+
+
+- The Rise of Eventual Consistency
+
+    - Some NoSQL data stores choose to sacrifice some consistency guarantees to make scalability
+        easier.  For instance, Amazon's Dynamo data store (built to handle thier shopping carts) did
+        this.
+
+    - Rather than enforcing full consistency in distributed transactions, Amazon decided high 
+        availability was more important.  Based on these priorities, Amazon sacrifieced complex
+        queries, simplified the data model, and introduced eventual consistency.
+
+    - With 'eventual consistency', different nodes may have different versions of the data, but state
+        changes eventually propogate through all the servers.  Any given replica may be lagging behind.
+
+    - If multiple servers allow writes, there may be conflicts that have to be resolved.  The easiest
+        way to resolve them is to say 'most recent write wins', but this can lead to some data loss.
+
+
+    - Alternatively, some data stores like Dynamo push the responsibility for conflict resolution onto
+        it's clients.  Any time a client asks for data, they provide all the conflicting versions of
+        the data and let the client decide how to resolve the conflict.
+
+      For instance, if there are multiple versions of a user's shopping cart, merge them together with
+        all the products and let the user decide if they want to remove some of them.  That way, you
+        don't have to pick one winning version of the cart.
+
+
+
+- Cassandra's Self-Healing Strategy
+
+    - Many different scenarios can result in replicas having different data from the master.  (For
+        instance, human errors, application bugs, hardware issues).  To help deal with this, some
+        data stores use additional self-healing strategies.
+
+    - For example, 10% of reads sent to Cassandra trigger a background 'read repair' mechanism.  After
+        a response is sent to the client, the Cassandra node fetches the requested data from all of
+        the replicas, compares their values, and sends updates back to any node with stale or
+        inconsistent data.
+
+    - This adds overhead, but makes the system much more resilient to failures.
+
+
+
+- Quorum Consistency
+
+    - Cassandra allows you to fine-tune consistency guarantees by specifying the consistency level of
+        each query indepdently.  
+
+    - 'Quorum consistency' is a good way to trade latency for consistency in eventually consistent
+        data stores.  You need to wait longer for the majority of servers to respond, but you get the
+        freshest data.
+
+    - When you write using quorum consistency, the majority of servers need to respond that they have
+        persisted your change.
+
+    - When you read, the majority of servers need to respond so that the most up-to-date copy of the 
+        data can be found and returned to the client.
+
+    - If write certain data using quorum consistency, then you always read it using quorum consistency,
+        you are guaranteed to always have the most up-to-date data and thus regain the
+        read-after-write semantics.
+
+
+
+- Faster Recovery to Increase Availability
+
+    - While some databases like Dynamo and Cassandra trade some of their consistency guarantees in 
+        favor of high availability, some other data stores trade some of their high availability for
+        consistency.
+
+    - Rather than guaranteeing that all clients can read and write all of the time, some data
+        designers decided to focus more on quick failure recovery rather than sacrificing global
+        consistency.
+
+
+    - In MongoDB, data is automatically sharded and distributed among multiple servers.  Each piece
+        of data belongs to a single server, and anyone who wants to update data needs to talk to the
+        server responsible for the data.
+
+      If a server becomes unavailable, MongoDB rejects all writes to the data that the failed server
+        was responsible for.
+
+
+    - To increase high availability, MongoDB supports replica sets, and it is recommended to set up
+        each of the shards as a replica set.  When a primary node fails, an election process picks a
+        new primary, enabling prompt and automatic failover.
+
+    - Note that although MongoDB is a 'CP database', replication is asynchronous, so it is still not
+        like a relational database in consistency.
+
+
+
+- Cassandra Topology
+
+    - Cassandra was originally built at Facebook, as a merger of design patterns from BigTable
+        (developed at Google) and Dynamo (developed at Amazon).
+
+    - All nodes are functionally equal.  There is no single point of failure, and all nodes perform
+        the exact same functions.  Clients can connect to any node, and that node becomes the client's
+        'session coordinator', which takes responsiblity for all cluster activites like replication
+        or sharding.
+
+    - Clients issue queries to any node without knowledge about the topology of the cluster.  Each of
+        the Cassandra nodes know the status of all other nodes and what data they have, so they can
+        delegate queries to the correct servers.
+
+    - Cassandra performs data partitioning automatically so that each of the nodes gets a subset of
+        the overall data set, and the nodes communicate among each other to make sure they all know
+        where each part of the data lives.
+
+
+    - The Cassandra data model is based on a 'wide column', similar to Google's BigTable.  In a wide
+        column model, you create tables, and then each table can have an unlimited number of rows.
+
+      Tables are not connected, each table lives independently, and Cassandra does not enforce any
+        relationships between tables or rows.
+
+
+    - Cassandra tables are also defined in a different way than relational DBs.  Different rows may
+        have different columns, and they may live on different servers in the cluster.  This 
+        schema-on-read approach gives you a lot of flexibility.
+
+    - You get far less tools for searching than with a relational DB.  To retrive a row, you need to
+        know the row's key.
+
+
+    - When you send a query to your session coordinator:
+
+        1. The session coordinator hashes the row key to a number
+        2. Based on the number, it finds the partition range your row key belongs to (the correct shard)
+        3. It looks up which server is responsible for that partition range and delegates the query to it
+
+
+    - For replication, you can specify how many copies of each piece of data to keep across the cluster,
+        and session coordinators are responsible for ensuring the correct number of replicas.
+
+      Any time you write a query, the coordinator node forwards it to all of the servers resonsible for
+        the corresponding partition range.
+
+
+    - One tradeoff is that deletes are the most expensive operation in Cassandra.  This makes certain
+        kinds of workflows impractical.  For instance, you don't want to use it as a queue.
