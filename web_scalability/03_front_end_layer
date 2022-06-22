@@ -208,4 +208,3 @@
     - DNS and CDN are offloaded to 3rd party services
     - This approach lets you control latency, cost, and security and legal requirements
     - Need to plan scaling ahead of time
-    - 

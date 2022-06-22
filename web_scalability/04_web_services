@@ -1,0 +1,185 @@
+-----------------------------------------------------------------------------
+| CHAPTER 4 - WEB SERVICES                                                  |
+-----------------------------------------------------------------------------
+
+- Web Services as an Alternative Presentation Layer
+
+    - Traditional approach just mixes all logic together, with HTML, CSS, JavaScript, static assets,
+        and the server side of the application all in one package.
+
+    - Fast to iterate and add new features, especially in early stages of development.  Defers big
+        design decisions until requirements are set.
+
+    - As systems get larger, this approach becomes difficult to maintain and get good performance 
+        from.  API-first approach is generally preferred today.
+
+
+
+- API-First Approach
+
+    - Decide on contract, then clients and web services can be built independently.  Can have 
+        multiple different types of clients.
+
+    - Need to think about exactly what you need to avoid overengineering.  Will be the more
+       flexible and scalable approach over time.
+
+
+
+- Pragmatic Approach
+
+    - Start with a monolith during the early days of development, so that you can change it as easily
+        as possible.  Then, when it comes time to move towards deploying it, split it up into
+        a set of separate services and components.
+
+
+
+- Function-Centric Web Services
+
+    - This approach (goes back to early 80s) uses the concept of calling functions or methods on remote
+        machines.  Many implementations, including CORBA, XML-RPC, DCOM, and SOAP (which became
+        dominant).
+
+    - Worked better in theory than in practice.  It turns out you can't hide the challenges of
+        distributed systems.
+
+
+    - SOAP = XML messages sent over HTTP
+
+        - WSDL (Web Service Definition Language) files describe available endpoints
+        - XSD (XML Schema Definition) files defined data structures that could be exchanged
+        - Client code didn't know it was calling web service, just code generated from WSDL and XSD
+        - SOAP libraries handled serialization, authentication, routing, error handling
+
+        - Dozens of specs built on SOAP with names like ws-*
+        - Can't use HTTP-layer caching since the URL doesn't contain all request parameters
+        - Some SOAP implementations are stateful, making them non-scalable
+        - Little reason to use today unless legacy system
+
+
+
+- Resource-Centric Web Services
+
+    - A resource is a type of object you can perform CRUD operations on.  They are uniquely identified
+        by URLs.  They usually return JSON.
+
+    - Now the de facto standard for web development.
+
+    - Only 5 verbs, so easy to understand.  Don't need to auto-generate client code.  
+
+    - Authentication typically needs to be performed before using the API.  Depends on using HTTPS/TLS 
+        for encryption.  
+
+    - All public operations performed using the GET method can be cached transparently by HTTP caches.
+        The URL can be quickly looked up in the cache.
+
+
+
+- Keeping Service Machines Stateless
+
+    - Advantages of keeping services stateless:
+
+        1. Can distribute traffic on per-request basis (ie round-robin)
+        2. Can use load balancers and heartbeat checks to take servers out of rotation if they fail
+        3. Can restart and decomission servers at any time without affecting clients
+        4. Rolling updates
+        5. Scale services by just adding more clones
+        6. Cloud-hosted load balancers provide auto-scaling
+
+
+    - The only data stored by web servers is cached objects that expire based on their TTL property.
+        Such objects can be stored in isolation until they expire without your services needing to
+        talk to each other.
+
+
+    - Shared State Reason #1 - Authentication
+
+        - Clients will pass authentication token with each request
+        - Token will have to be validated on web services side
+        - May want to cache user permissions so they don't have to be looked up every time
+        - Need to cache them in shared object store in case permissions change
+
+
+    - Shared State Reason #2 - Resource Locking
+
+        - Can use something like ZooKeeper to keep track of locks
+        - Can sometimes use optimistic concurrency control or message queues instead
+
+        - If you decide to use locks, make sure you acquire resources in a consistent order to
+            avoid deadlocks.  For instance, if you need to transfer funds between 2 accounts, always
+            lock the lower account number first.
+
+        - There is a trade-off between fine-grained locks (which require lots of locking and unlocking
+            operations) and coarse locks (where you have to lock a large amount of data).
+
+        - You can use locks in scheduled batch jobs, crons, and queue workers, but it is best to
+            avoid using them in the request-response cycle to avoid availability issues.
+
+
+    - Shared State Reason #3 - Distributed Application-Level Transactions
+
+        - 2PC = Notorious for scalability and availability issues
+        - One solution is to relax consistency rules
+        - Second solution is to provide compensatory transactions
+
+
+
+- Caching Service Responses
+
+    - The HTTP protocol requires all GET method calls to be read-only, so that they can be cached.
+        Make sure that they are idempotent (they don't cause any state changes).
+
+    - There are subtle ways that you can break the semantics of GET requests.  For instance, if you
+        have a GET request for some resource, and that request results in the cached version of that
+        resource being updated in an object cache, you have just updated state.
+
+
+    - Another aspect to consider when designing REST APIs is which endpoints require authentication.
+        Authentication information is usually passed in HTTP headers, and REST endpoints might see
+        different data depending on who is logged in.
+
+      This means that the URL is not enough to produce the response for a particular user, so a
+        cache would need to include the Authentication headers when constructing a key.
+
+
+    - To truly leverage HTTP caching, you want to make as many of your resources public as possible.
+        In this case, you have a single object for each URL.  If you had a music website, caching
+        the album details would be easy.
+
+
+    - HTTP caching is usually implemented in the web services layer in a similar way in which it is
+        done in the front end layer.  
+
+        1. To be able to scale using a cache, you usually deploy reverse proxies between your clients
+             and your web service.
+
+        2. As your web services layer grows, you may end up with a more complex deployment where
+             each of your web services has a reverse proxy dedicated to cache its results.
+
+        3. Depending on the reverse proxy used, you may also have load balancers deployed between
+             reverse proxies to distribute the underlying network traffic.
+
+
+             Smaller Service
+             -------------------------
+
+             Client -> Reverse Proxy HTTP Cache       ->  Web Service  
+                      (that can distribute requests)       Server 1 ... Server N
+
+
+             Larger Services
+             ------------------------
+
+                    / Reverse Proxy HTTP Cache -> Load Balancer -> Web Service A [1...N]
+             Client
+                    \ Reverse Proxy HTTP Cache -> Load Balancer -> Web Service B [1...N]
+
+
+
+- Functional Partitioning
+
+    - Creating separate services for separate functions allows you to tailor a different approach
+        to each problem.  For instance, one problem might be very read-heavy, while a different
+        service might be extremely write-heavy.
+
+    - If you create too many partitions or create them too early, you may end up with a mess.  So,
+        it's important to think about what data needs to belong together and what doesn't.
