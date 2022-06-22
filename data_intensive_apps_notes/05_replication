@@ -273,4 +273,164 @@
         - Another option is to use triggers and stored procedures that can log changes to another table,
             to be read by external processes.  'Databus' for Oracle and 'Bucardo' for Postgres work
             like this.  This approach has high overhead but allows for maximum flexibility.
-            
+
+
+
+- Problems with Replication Lag
+
+    - Being able to tolerate node failures is one reason for wanting replication.  Scalability and
+        latency are the others.
+
+      Leader-based replication requires all writes to go through a single node, but read queries can
+        go to any node.  This works well for workloads that have only a small percentage of writes.
+        We create lots of followers to handle all the reads, and the load is taken off of the leader
+        (known as 'read-scaling architecture').
+
+
+    - This read-scaling approach only practically works with asynchronous replication.  This means 
+        that a client might see outdated information, since a given follower might not have gotten all
+        the new writes.
+
+      Since this inconsistency is just a temporary state, it is known as 'eventual consistency'.  Note 
+        that the term 'eventual' is deliberately vague - the 'replication lag' might be a fraction of
+        a second, or it might be several seconds or even minutes if the system is near capacity.
+
+
+
+- Reading Your Own Writes
+
+    - Many applications let a user submit some data, then show them the data that was just submitted.
+        With asynchronous replication, the new data might not be there when they try to view it,
+        leading to a confusing user experience.
+
+
+    - In this situation, we need 'read-after-write consistency' (aka 'read-your-writes consistency').
+        This guarantees that users will see their own writes.  There are a few ways we could do this:
+
+        1. When reading something the user might be modifying, read it from the leader.  Otherwise,
+             read it from a replica.  This implies you know if it's something the reader might have
+             modified (like their own account).
+
+        2. Maybe use other criteria for reading it from the leader.  For instance, we could read all
+             writes made in the last minute from the leader.
+
+        3. Client can send the timestamp of its last write, and the system can ensure replicas have
+             updates at least until that timestamp.
+
+
+
+- Monotonic Reads
+
+    - With asynchronous followers, it is possible for a user to see things 'moving backwards in time'.
+        For instance, they send a query to one follower, then they send another query to a follower 
+        with greater lag.
+
+      'Monotonic reads' is a guarantee that this kind of anomaly does not happen.  It's a guarantee
+         between strong consistency and eventual consistency.  You may see an old value, but you
+         won't see an old value overwrite a new one.
+
+
+    - One way to achieve monotonic reads is to make sure each user always makes their reads from the
+        same replica.  However, it that replica fails, the user's queries will need to be rerouted to
+        another replica.
+
+
+
+- Consistent Prefix Reads
+
+    - Our third example of replication lag anomalies concerns violations of causality.  Imagine a 
+        third party hears this conversation out of order:
+
+        Mrs. Cake
+          About ten seconds usually, Mr. Poons.
+
+        Mr. Poons
+          How far into the future can you see, Mrs. Cake?
+
+
+    - We have Event B, which is dependent on Event A, but we receive Event B first, so it makes no
+        sense.  Preventing this problem requires 'consistent prefix reads', which guarantees that if
+        a series of writes happens in a certain order, anyone reading them will see them in the
+        same order.
+
+
+    - One solution is to make sure that any writes that are causually related to each other are
+        written to the same partition.  In some applications, this cannot be done efficiently.
+
+
+
+- Multi-Leader Replication
+
+    - The downside of leader-based replication is that all writes must go through the single leader,
+        and if that reader becomes unresponsive, all writes have to stop.  The 'multi-leader'
+        configuration allows us to have multiple leaders.
+
+
+    - Use cases for multi-leader replication:
+
+        1. Multi-datacenter operation = Put a leader in each datacenter, the leaders communicate all
+                                          writes to each other, same as single-leader within a 
+                                          datacenter.  If data is changed at 2 datacenters
+                                          concurrently, need conflict resolution.
+
+        2. Clients with offline operation = App (ie calendar app) has local DB that acts as leader
+                                              (it accepts write requests), and there is an 
+                                              asynchronous replication between all devices with the
+                                              calendar app.  CouchDB is designed for this kind of
+                                              operation.
+
+        3. Collaborative editing = Several people can edit a document simultaneously (ie Google Docs).
+                                     When a user edits a document, their changes are applied to their
+                                     local replica, then asynchronously replicated to the server and
+                                     any other users.  Need to lock while an individual user performs
+                                     writes, but can do this on every keystroke.
+
+
+
+- Handling Write Conflicts
+
+    - If 2 leaders both make accept writes to the same data, then try to asynchronously replicate to
+        each other, a conflict will occur.  
+
+
+    - In a single-leader database, the second writer will either block and wait for the first write to
+        complete, or we can abort and force the user to retry the write.
+
+      In a multi-leader database, the conflict might only be detected at a later time, so it may be
+        too late to ask the user to resolve it.
+
+
+    - The first strategy for dealing with this problem is avoiding conflicts in the first place.  For
+        instance, we could guarantee all writes for a particular record go through the same leader.
+        We could implement this by giving each user a 'home datacenter'.
+
+      Note that if you want to change a leader on the fly (for instance, if one goes down), this 
+        strategy will break down.
+
+
+
+- Converging Toward a Consistent State
+
+    - 
+
+
+
+
+
+
+- Multi-Leader Replication Topologies
+
+
+- Leaderless Replication
+
+
+- Writing to the Database When a Node is Down
+
+
+- Limitations of Quorum Consistency
+
+
+- Sloppy Quorums and Hinted Handoff
+
+
+- Detecting Concurrent Writes

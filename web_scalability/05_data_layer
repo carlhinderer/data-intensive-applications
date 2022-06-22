@@ -1,0 +1,186 @@
+-----------------------------------------------------------------------------
+| CHAPTER 5 - DATA LAYER                                                    |
+-----------------------------------------------------------------------------
+
+- Scaling with MySQL - Replication
+
+    - MySQL allows you to synchronize the state of 2 servers, a master and a replica.  Applications
+        can read from the replica, but can only write to the master.
+
+    - The leader records the data-changing statements in a log file called a 'binlog', together with
+        a timestamp, and also assigns a sequence number to each statement.  Once a statement has been
+        written to binlog, it can be sent to replicas.
+
+    - At any point, the replica can connect to the master and ask for an incremental update of the
+        master's binlog file.  In the request, it provides the sequence number of the last command it
+        saw.
+
+    - Note that this is asynchronous replication.  For this reason, you can have multiple replicas
+        if you have a read-heavy load.
+
+    - The master doesn't keep track of replicas.  If you want to keep track of them and whether
+        they're alive, you'll need a separate application for that.
+
+
+
+- Rebuilding From a Replica Failure
+
+    - To rebuild a failed replica (this is a manual process):
+
+        1. Take a database backup from the master or another replica.
+        2. Connect to the master to catch up.  This might take hours in a busy DB or with an old backup.
+
+
+
+- Rebuilding From a Master Failure
+
+     - MySQL doesn't support automatic failover or any mechanism of automated promotion of a replica
+         to a master.  You need to:
+
+        1. Figure out which replica has the highest sequence number and make it the master.
+
+        2. If you have multiple replicas, you need to make them identical to the new master, either by
+             rebuilding them from a backup of the new master, or by manually tweaking binlog files to
+             get the exact same state.
+
+        3. You need to configure all remaining replicas to read from the new master.
+
+
+    - To get high availability in the event of a master failure, we can use a master-master topology,
+        where 2 masters both accept writes, and also replicate each other's binlogs.  To avoid race
+        conditions, a client should only write to one master at a time.
+
+      This approach doesn't improve scalability, since both masters still have to perform all the
+        writes, and they have all the I/O overhead from replicating each other also.  Also, you need
+        to take precautions to avoid data inconsistency, and this erases any performance gains from
+        having multiple servers.
+
+
+
+- Replication Challenges
+
+    - 'Replication lag' is a measurement of how far behind a replica is from a master.  If you have
+        a decent network or cloud solution, this should generally be less than 1s.
+
+    - Replication is only useful in scaling reads.  It will not help you scale writes, no matter what
+        topology you use.
+
+    - Replication is only useful in scaling out the number of reads, not the amount of data.  This is
+        because an entire copy of the data must exist on each machine.
+
+    - Multilevel replication can be used if you really want to scale reads.
+
+    - The concept of 'active data' says we should think about which of our data is used most often.
+        For instance, in an e-commerce system, recent transactions from the last 48 hours will be
+        accessed much more often than older transactions.
+
+    - Since replication is asynchronous, replicas can return stale data.
+
+    - Since replicated MySQL is difficult to get right, and prone to hard to debug errors, it makes
+        a lot of sense to use a hosted solution.
+
+
+
+- Data Partitioning (Sharding)
+
+    - Data partitioning (aka sharding) is dividing data into smaller buckets and assigning each
+        bucket to its own server.  A sharding key is picked that will always be present to uniquely
+        determine which server the data is on.
+
+    - For example, if you have an online store, you could just split data by UserId, and that would
+        be your sharding key.
+
+    - We can set MySQL up like this, and the servers themselves wouldn't need any special configuration.
+        They all have the same schema and function as normal.  In this case, all the sharding logic
+        lives in the application.
+
+    - Since each server will auto-increment ids individually, you may get records with the same id
+        in multiple servers.  In some cases this is acceptable, but if you need globally unique ids,
+        you'll need to manually set the auto-increment offsets.
+
+    - If you use a non-random sharding key (ie Country), your data will be skewed and not evenly
+        distributed.  Ideally, we want to split our data into buckets of equal size.
+
+
+
+- Advantages of Sharding
+
+    - Sharding is how you scale data systems horizontally.  Once your data is too large to live on a
+        single server, you need this approach.
+
+    - If you split the data into completely disjoint sets, you have a shared-nothing architecture and 
+        no overhead of communication between the servers.
+
+    - Nothing needs to be changed about the database instances themselves and applications can
+        handle all of the sharding logic.
+
+
+
+- Challenges of Sharding
+
+    - The logic for the routing adds complexity to the application tier.  If you want to run queries
+        that span multiple shards, you need to run them separately, then join the data in the 
+        application tier.
+
+    - You lose ACID semantics if you make changes across multiple shards.
+
+    - If you use modulo-based mapping, you'll have to migrate large amounts of data if you change
+        the number of servers.
+
+    - To avoid that large migration, you could keep a separate database that stores the shard for
+        each key.  Then, you can add servers without migrating data or migrate slowly over time.
+        You could use another MySQL instance for this.
+
+                             Global Master
+                               /       \
+                          Shard 1    Shard 2
+                          |     |    |     |
+                       Rep 1  Rep1  Rep2  Rep2
+
+    - If you already have another high speed data store, it may be more performant to put the shard
+        mappings there, rather than another MySQL instance.
+
+
+    - Another strategy is to always just split a shard in 2 if it gets too big.  That way only a
+        single instance will need to be rebalanced.  
+
+      For instance, you start out with 2 servers, but you esitmate you won't need more than 32.  Any
+        time you need to, just double your capacity.
+
+
+    - To deal with the auto-incrementing id problem, you just set the 'auto_increment_offset' for 
+        each DB instance.  For instance, if you have 2 shards:
+
+        Shard 1:  auto_increment_increment=2, auto_increment_offset=1
+        Shard 2:  auto_increment_increment=2, auto_increment_offset=2
+
+      Then, odd ids go to shard 1, and even ids go to shard 2.
+
+      Alternatively, some data stores (ie Redis) provide atomic counters to solve this problem.
+
+
+    - Once again, this approach involves a lot of complexity, and it is likely a cloud-hosted solution
+        would be a good alternative.  Cloud offerings manage sharding, shard management, data migration,
+        and cross-shard query execution.
+
+
+
+- Putting it All Together
+
+    - Once again, scalability can be boiled down to 3 underlying techniques:
+
+        1. Scaling by adding copies of the same thing
+        2. Functional partitioning
+        3. Data partitioning
+
+
+    - Example - Scaling an E-commerce Website
+
+        1. Split the functionality into 2 services, 'ProductCatalogService' and 'CustomerService'.
+             They use separate databases, the read-heavy product catalog and the write-heavy customer
+             service.  (Functional partitioning)
+
+        2. You can easily replicate your ProductCatalog, since it can fit on a single server.
+             (More copies of the same thing)
+
+        3. Your customer database is sharded on user id.  (Data partitioning)
