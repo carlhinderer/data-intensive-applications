@@ -2,6 +2,30 @@
 | CHAPTER 6 - CACHING                                                       |
 -----------------------------------------------------------------------------
 
+- Latency
+
+    - Here are the access times for different types of resources:
+
+        Operation Type                                                       Approximate Time
+        ---------------------------------------------------------------------------------------
+        Time to access local memory                                          100 ns
+
+        SSD disk seek                                                        100,000 ns
+
+        Time of a network packet round trip within the same data center      500,000 ns
+
+        Disk seek (non-SSD)                                                  10,000,000 ns
+
+        Read 1MB sequentially from network                                   10,000,000 ns
+
+        Read 1MB sequentially from disk (non-SSD)                            30,000,000 ns
+
+        Time of a network packet round trip across Atlantic                  150,000,000 ns
+
+        How many nanoseconds in a single second                              1,000,000,000 ns
+
+
+
 - Caching
 
     - Caching is winning the battle without the fight.  It can be used to increase performance and
@@ -363,6 +387,14 @@
     - Note that the caching layer for the front-end servers is often a CDN.
 
 
+    - SSD drives can sometimes be useful when scaling out a caching cluster.  If you switch your cache
+        from memory to disk (typically because you have a large pool of objects and need a better hit
+        rate), you have far more storage to use.
+
+      Faster random access times of SSDs will give you a 10x+ speedup, and since the data is desinged to
+        be disposable anyways, the high rate of failures dones't matter as much.
+
+
 
 - Nginx
 
@@ -377,4 +409,191 @@
     - Nginx can act as a load balancer.  It supports multiple forwarding algorithms and many advanced
         features, such as SPDY, WebSockets, and throttling.  It can also override headers to change
         caching behavior.
-        
+
+
+
+- Caching Application Objects
+
+    - After HTTP-based caches, the second most important component in a web application is usually a
+        custom object cache.
+
+      Object caches are 'cache-aside' rather than read-through.  The application is aware of the 
+        object cache, and actively uses it to store and retrieve.  
+
+
+    - Basically, we can think of object caches as key-values stores with support of object expiration.
+
+
+    - Common types of object caches:
+
+        1. Client-side cache
+
+        2. Caches co-located with code
+
+        3. Distributed object caches
+
+
+
+- Client-Side Caches
+
+    - Years ago, it was impossible for JavaScript to store data on the client's machine, but most
+        modern browsers support the WebStorage specification.  The client-side can cache ~5-25 MB
+        of data, which can take a lot of pressure off of your infrastructure.
+
+        // Store object in local storage
+        var preferences = {/* data object to be stored */};
+        localStorage.setItem('preferences', JSON.stringify(preferences));
+
+        // Get object from local storage
+        var cachedData = localStorage.getItem('preferences');
+        var preferences = JSON.parse(cachedData);
+
+
+    - SPAs make much more use of local storage.  Applications written for mobile device platforms
+        use similar techniques.
+
+    - The client side is responsible for cache refresh and invalidation.
+
+
+
+- Caches Co-located with Code
+
+    - This type of object cache is located directly on your web servers.  It is implemented in one of
+        the following ways:
+
+        1. Objects are cached directly in the application's memory.
+
+        2. Objects are stored in shared memory segments so that multiple processes running on the same
+             machine can access them.  This is less common in multithreaded environments like Java,
+             where all execution threads run within a single process.
+
+        3. A caching server is deployed on each web server as a separate application.  The application
+             uses the cache's normal interface to communicate with it.  This is common in single-server
+             deployments.  Memcached and Redis are common choices.
+
+
+    - Local caches are typically not replicated or synchronized between servers.  This makes them very
+        easy to deploy, but it has some drawbacks:
+
+        1. All of the servers will duplicate the same data, so this approach doesn't scale.
+
+        2. Caches cannot be kept consistent, and you cannot remove objects from them efficiently.
+
+
+
+- Distributed Object Caches
+
+    - With this type of cache, a network round trip to the cache server is required.  Redis and Memcached
+        are the most common choices by far.
+
+    - Just connect to the cache for cache invalidation.
+
+
+    - Using dedicated cache servers is a good way to push responsibility out of your application.
+        For instance, Redis allows for data persistence, replication, and efficient implementations of
+        counters, lists, and object sets.
+
+      They are heavily optimized when it comes to memory management, and they take care of things like
+        object expirations and evictions.
+
+
+    - Cache servers usually use the LRU algorithm to decide which objects should be removed from the
+        cache when they reach a memory limit.
+
+
+    - Distributed caches are powerful scalability tools, but adding them to your system does add
+        complexity and management overhead.  It is usually simpler to start with a single cache server.
+
+
+
+- Scaling Object Caches
+
+    - Browser caches cannot be scaled.  Local caches can usually only scale by falling back to the
+        file system.
+
+      Distributed object caches are usually scaled using data partitioning.  In Memcached and Redis,
+        this partitioning is the responsibility of the client.
+
+
+    - Memcached distributes a client that uses a consistent hashing algorithm to automatically
+        distribute data among the cache servers.  This allows for a shared-nothing approach.
+
+    - Redis allows for master-follower replication, which is useful if you need a lot of read-only
+        replicas.
+
+    - AWS Elastic Cache is just a hosted version of these.  It allows you to choose whether you want to
+        use Redis or Memcached.
+
+
+
+- Caching Rules of Thumb - Caching High Up the Call Stack
+
+    - The higher up the call stack you can cache, the more resources you can save.
+
+
+            Client Caches (HTTP and Object caches)                    # Saved 100% of resources
+                            |
+                            |  (Web Requests)
+                            v
+            HTTP Reverse Proxies/CDN                                  # Saved 98% of resources
+                            |
+                            |  (Web Requests)
+                            v
+            Web Application Servers (Local and distributed caches)    # Saved 75% of resources
+                            |
+                            |  (Web Service Requests)
+                            v
+            HTTP Reverse Proxies                                      # Saved 66% of resources
+                            |
+                            |  (Web Service Requests)
+                            v
+            Web Service Servers (Local and distributed caches)        # Saved 50% of resources
+                            |
+                            |  (Web Service Requests)
+                            v
+            Main Data Store                                           # Saved 0% of resources
+
+
+
+- Caching Rules of Thumb - Reuse Cache Among Users
+
+    - As an example, imagine we have a service that returns restaurants close to users.  A simple
+        implementation would be to check the user's coordinates, then add a cache entry with the
+        user's coordinates as the key, and the list of restaurants as the value.
+
+
+    - The problem with this is that the cache entry will change every time the user takes a step.
+
+      A better approach would be to round the GPS coordinates to 3 decimal points so that users on
+        the same street block could reuse the same results.
+
+
+
+- Caching Rules of Thumb - Where to Start Caching?
+
+    - Using some kind of profiling of your requests can be very useful to figure out where caching is
+        needed most.  This is often a better approach than just guessing where you need it.
+
+
+
+- Caching Rules of Thumb - Cache Invalidation is Difficult
+
+    - When you start with a simple site, this is easy.  You add an object to a cache, and any time the
+        data changes, you go back to the cache and remove the stale object.
+
+      However, cached objects are usually the result of computation that takes multiple data sources as
+        input.  This means that when data changes, you need to invalidate all of the cached objects that
+        have used that data as input.  If you have multiple instances, this has to happen on all
+        instances.
+
+
+    - For instance, let's say you have an ecommerce app, and you are very aggressive about caching
+        everything in an object cache.  You cache query results for paginated product lists, keyword
+        searches, category and product pages.
+
+      The problem is that every time a new product is added, all of this becomes invalid.
+
+
+    - The best alternative to cache invalidation is to just set a TTL on your cached objects.
+
+    - Due to their temporary nature, caching issues are usually difficult to reproduce and debug.
