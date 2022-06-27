@@ -1,0 +1,175 @@
+-----------------------------------------------------------------------------
+| CHAPTER 6 - CACHING                                                       |
+-----------------------------------------------------------------------------
+
+- Caching
+
+    - Caching is winning the battle without the fight.  It can be used to increase performance and
+        scalability at low cost, without having to recompute responses.
+
+
+    - Caching is a very popular technique in computer science.  Here are a few examples:
+
+        - CPU caches
+        - Hard drive caches
+        - Linux OS file caches
+        - database query caches
+        - DNS caches
+        - HTTP browser caches
+        - HTTP proxies and reverse proxies
+        - different types of application object caches
+
+
+    - Instead of fetching data and computing a response every time a request is received, we can build
+        the result once and store it in the cache.  Subsequent requests are satisfied by returning the
+        cached result until it expires or is explicitly deleted.
+
+
+
+- Cache Hit Ratio
+
+    - Three main factors affect your cache hit ratio:
+
+        1. Data set size
+        2. Space
+        3. Longevity
+
+
+    - Your cache key space is all the possible unique keys your application could generate.  The more
+        unique keys your application generates, the less chance you have to use any one of them.
+
+      If you want to cache weather forecast data based on the client's IP, you would have 4 billion 
+        possible cache keys.  If you cache the weather forecast based on country, you have less than
+        300 keys.  The fewer possible keys, the better the cache efficiency.
+
+
+    - The second factor is the number of items you can store in your cache without running out of
+        space.  This depends on the size of the cache and the size of the items.
+
+      Because caches are usually stored in memory, space is relatively limited and expensive.  If you
+        run out of space, you'll have to evict entries before you can add new ones.  The more objects
+        you can fit in your cache, the better your cache hit ratio.
+
+
+    - The third factor is how long, on average, each object can be stored in the cache without 
+        expiring or being invalidated.
+
+      In some caches, you can cache objects for a predefined amount of time using TTL.  However, in
+        other cases, you may not be willing to serve stale data.  For instance, if prices are changed
+        in an ecommerce site, we cannot show the old prices, so we have to invalidate the cache
+        entries.
+
+
+    - Use cases with a high read-to-write ratio are usually good candidates for caching.
+
+
+
+- Caching Based on HTTP
+
+    - The HTTP protocol has been around for a long time, and over the years the specification has
+        changed to allow different parts of the infrastructure to cache HTTP responses.
+
+      This makes HTTP caching a bit more difficult to understand, and it's also the reason there are
+         many different HTTP headers related to caching (and even some HTML metatags!).
+
+
+    - All HTTP layer caches are 'read-through caches'.  A read-through cache is a caching component
+        that can return cached data or fetch data from the client if necessary.
+
+      This means that the client connects to the read-through cache, rather than the origin server
+        that generates the actual response.
+
+
+    - The cache is always meant to be an intermediate (aka a 'proxy'), transparently adding caching
+        functionality to HTTP connections.  Clients are not able to distinguish whether they received
+        a cached object or not.
+
+
+
+- HTTP Headers
+
+    - Simple HTTP request:
+
+        # Request
+        GET / HTTP/1.1
+        Host: www.example.org
+        Accept-Encoding: gzip,deflate
+        Connection: keep-alive
+
+        - 'Accept-Encoding: gzip,deflate' defines which compressed data encodings browser supports
+        - 'Connection: keep-alive' means that server should keep TCP connection open for addl downloads
+
+
+    - And here is the response:
+
+        # Response
+        HTTP/1.1 200 OK
+        Content-Encoding: gzip
+        Content-Type: text/html; charset=UTF-8
+        Content-Length: 9381
+        Connection: close
+
+        ... response body with contents of the page ...
+
+        - 'Content-Encoding: gzip' indicates the server decided to return a gzip response
+        - 'Connection: close' means the client's request to keep the connection open was rejected
+
+
+
+- The 'Cache-Control' Header
+
+    - The 'Cache-Control' header was added to the HTTP/1.1 spec and is now supported by most browsers
+        and caching packages.  Cache-Control allows you to specify multiple options:
+
+        Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+
+
+    - The most important Cache-Control options that web servers may include in their responses:
+
+        private                # Private to user that requested it, cannot be served to any other user
+
+        public                 # Can be shared among users as long as not expired
+
+        no-store               # Response should not be persisted to disk (for sensitive information)
+
+        no-cache               # Response should not be cached (means that cache should always ask server)
+
+        max-age                # How many seconds response can be served from cache before becoming stale
+                               #   (defines TTL of response)
+
+        no-transform           # Includes response should be served without modifications
+
+        must-revalidate        # Once response becomes stale, it cannot be returned to clients without
+                               #   revalidation
+
+
+    - A cached object is 'fresh' until it's expiration time passes.  After that, it becomes 'stale',
+        but can still be returned to clients if they explicitly allow stale responses.
+
+    - Clients can also use the 'Cache-Control' header in requests, but it is rarely used and has
+        slightly different semantics.
+
+
+
+- The 'Expires' Header
+
+    - The 'Expires' header allows you to specify an absolute point in time when the object becomes
+        stale.
+
+        Expires: Sat, 23 Jul 2015 13:14:28 GMT
+
+
+    - Unfortunately, setting the TTL in multiple different headers leads to confusion and inconsistent
+        behavior.  So, it's a best practive to set it in one place and stick with it.
+
+
+
+- The 'Vary' Header
+
+    - The 'Vary' header tells caches that you may need to generate multiple variations of the response
+        based on some HTTP request headers.
+
+      The most common use for this is to indicate that clients that support gzip will get a 
+        compressed response, while clients that don't support gzip will not.
+
+        Vary: Accept-Encoding
