@@ -318,3 +318,119 @@
         receive are always valid.  You can put failed messages in a dead letter queue so that they
         can be reviewed or simply discard them.
 
+
+
+- Amazon Simple Queue Service
+
+    - Cloud-based service known for it's simplicity and pragmatic approach.  Infrastructure, 
+        availability, and scalability are all managed for you.
+
+    - Using hosted services like this is often an order of magnitude cheaper than hosting them yourself,
+        even on cloud platforms.
+
+    - Note that you should always write code in a way that makes it easy to switch to different brokers
+        by using wrappers and interfaces.
+
+    - We should be able to process tens of thousands of messages per second, per queue on SQS.
+
+    - Messages will be delivered out of order, and we can expect occasional redeliveries.
+
+
+
+- RabbitMQ
+
+    - RabbitMQ is a high performance platform created for financial institutions.  It is extremely
+        flexible, and supports both the AMQP and STOMP protocols.
+
+    - Publishers and consumers are completely separated, as they interact with separate endpoint types.
+
+
+    - Rabbit uses an 'exchange', which is just an abstract endpoint to which publishers address their
+        messages.  Publishers do not have to know topic or queue names as they publish messages to
+        exchanges.  Consumers consume messages from queues.
+
+      Publishers only need the location of the broker and name of the exchange.  Once a message is
+        published to an exchange, RabbitMQ applies routing rules and sends copies of the message to
+        all applicable queues.
+
+      Once messages appear in queues, consumers consume them without knowing anything about exchanges.
+
+
+    - The routing rules from exchanges to queues can be defined:
+
+        - Externally using a web interface
+        - By using the AMQP protocol
+        - By using RabbitMQ's REST API
+
+
+    - Rabbit has a built-in backpressure feature, which allows it to throttle producers to avoid 
+        message loss and running out of memory.
+
+
+
+- ActiveMQ
+
+    - Similar to RabbitMQ in terms of functionality, performance, and scalability abilities.  It
+        is written in Java, and can be run as an embedded message broker within your application.
+
+    - Does not provide as many advanced routing capabilities as RabbitMQ.
+
+
+
+- Introduction to Event-Driven Architecture
+
+    - 'Event-driven architecture' is an architecture style where most interactions between different
+        components are realized by announcing events that have already happened, rather that
+        requesting work to be done.
+
+      An 'event' is something that happened (ie an order was placed).
+
+
+    - The traditional synchronous method of communication is known as 'temporal coupling', meaning
+        that the caller cannot continue until it gets a response from the receiver.
+
+
+    - Using a message queue with producers and consumers is an advantage, since it decouples the
+        processing.  Unfortunately, the producer is often still coupled to the system, since the
+        producer knows what work needs to be done by the consumer.
+
+
+    - Using event-based interaction, the event publishers know nothing about any consumers being
+        present.  For instance, the order service publishes a 'NewOrderCreated' event.  It has no
+        idea what happens after that.
+
+      This provides a very high level of decoupling.
+
+
+    - 'Event sourcing' is a technique where every change to the application state is persisted as an
+        event.  Events are usually stored on disk in the form of event log files or some data store.
+
+      As a result, if you need to restore the system, you can restore it to an old state (ie using
+        a daily snapshot), then replay the event log to reach the same end state.
+
+
+
+- Request/Response Coupling Surface Area
+
+    [Client Component]   -------  depends on ------->    [Service Component]
+      A. How to find the service                           A. Location needs to be preserved or backwards
+                                                                compatible
+
+      B. Service Request API Definition                    B. Restricts changes in contracts
+
+      C. Service Response Definition                       C. Methods and parameters need to remain for
+                                                                backwards compatibility
+
+      D. Expectations about service's side effects
+
+      E. Temporal dependency on service's response         E. Need to respond within agreed SLA
+
+
+
+- Event-Based Interaction Coupling Surface Area
+
+    [Publisher Component]   -------  depends on ------->    [Consumer Component]
+      A. Event message format and meaning                     A. Event message format and meaning
+
+                                                              B. Constrained by the event definition and
+                                                                   data included
