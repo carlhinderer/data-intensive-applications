@@ -225,3 +225,96 @@
         6. If message persistence is needed
 
         7. If message acknowledgment is needed (so messages aren't lost in consumer crash)
+
+
+
+- Benefits of Message Queues
+
+    - One of the benefits of message queues is that they enable asynchronous processing.  We can defer
+        time-consuming tasks without blocking our clients.
+
+
+    - Good use cases of this asynchronous approach:
+
+        - Interacting with remote servers
+        - Low-value processing in the critical path (non-essential functions)
+        - Resource intensive work (optimize for CPU, memory, I/O, etc.)
+
+
+    - Another benefit is that message queues make for easier scalability.  Since queue workers
+        consuming messages don't share state, they are easy to scale out.
+
+    - Message queues allow you to transparently even out traffic spikes.  You can keep receiving
+        requests, even in a time of increased traffic.
+
+    - Isolating producers from consumers make our system more robust and fault tolerant.  Producers
+        are not affected by consumer failures, and consumers are not affected by producer failures.
+
+    - We should always try to create publishers that don't care who is consuming their messages or how.
+
+
+
+- Message Queue Challenge - No Message Ordering
+
+    - At scale, message ordering is not guaranteed.  For instance, you may get the 'Create Welcome Email'
+        message before you get the 'Create User' message.  There are 2 concurrently running message
+        consumers, and this is a classic race condition.
+
+
+    - Also, one of the consumers might fail while processing a message, and would need to be
+        re-enqueued.  Re-enqueueing a message is a strategy used by many message brokers, as it is
+        assumed that a message hasn't been fully processed if it wasn't acknowledged by a consumer.
+
+      And if we do re-enqueue it, there is no guarantee the previous consumer didn't resume processing.
+
+
+    - Common ways to solve the ordering problem:
+
+        1. Limit the number of consumers to a single thread per queue.
+
+        2. Build the system to assume that messages can arrive in random order.
+
+        3. Use a message broker that supports partial message ordering guarantees.
+
+
+    - It is best to depend on the message broker to deliver messages in the right order using a
+        partial message guarantee (ActiveMQ) or topic partitioning (Kafka).
+
+      In ActiveMQ, this means that all messages with the same GroupId are delivered to the same
+        consumer.  This way, ordering is guaranteed for that GroupId.
+
+
+
+- Other Message Queue Challenges
+
+    - Dealing the problem of message enqueueing can be easy or hard, depending on the application 
+        needs.  If you can create idempotent consumers and use at-least-once semantics, your application 
+        will be much simpler and more robust than with exactly-once.
+
+      Sometimes, this is not possible, though.
+
+
+    - Workflows with work broken down into small chunks are prone to race conditions.  You could
+        describe this as 'programming without a call stack'.  
+
+
+    - Systems built as hybrids of traditional imperative and message-oriented code can become more
+        complex because their message flow is not explicitly declared anywhere.
+
+
+
+- Message Queue Anti-Patterns
+
+    - Don't treat the message queue like a TCP socket.  Some brokers allow you to have return channels,
+        but avoid having an architecture where you send requests and wait for responses.
+ 
+    - Don't treat the message queue like a database.  You should not allow deleting or updating 
+        messages.
+
+    - Avoid coupling producers with consumers.  Don't hardcode class names or make assumptions about
+        how the message will be consumed when publishing.  Treat the message format as a contract.
+
+    - You should be able to handle malformed messages and failures.  Don't assume the messages you
+        receive are always valid.  You can put failed messages in a dead letter queue so that they
+        can be reviewed or simply discard them.
+
