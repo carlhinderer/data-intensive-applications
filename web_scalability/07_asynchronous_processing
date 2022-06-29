@@ -1,0 +1,227 @@
+-----------------------------------------------------------------------------
+| CHAPTER 7 - ASYNCHRONOUS PROCESSING                                       |
+-----------------------------------------------------------------------------
+
+- Core Concepts
+
+    - Synchronous = caller waits for result before continuing
+      Asynchronous = caller continues without waiting for result
+
+
+    - The results of an asynchronous call can be consumed by the caller using callbacks.  In this case,
+        the caller doesn't block while waiting for the result, but provides a mechanism to be 
+        notified once the operation is finished.
+
+
+    - Using AJAX in JavaScript is one of the most common examples of using callbacks.  You declare a
+        callback function when sending a request, and it is automatically invoked when the result is
+        returned.
+
+      JS's anonymous functions capture the scope in which they are declared, which makes callbacks
+        easy to declare in a concise way.
+
+        emailService.sendEmail(message, function(error){
+            if(error){
+                messageRow.markAsFailed(error);
+            } else {
+                messageRow.markAsDelivered();
+            }
+        });
+
+      JS is only running a single thread of execution, but the JS event loop allows us to "emulate"
+        parallel processing.  This provides a much better UX.
+
+
+    - Blocking = You code has to wait for an external operation to finish.
+
+      Blocking I/O = Blocking input/output, waiting for hard drive, network connection, etc.
+                       (Ex: opening a TCP connection to a remote server)
+
+      Nonblocking I/O = I/O operations that do not block the client code's execution
+                          (You always provide a callback function)
+
+
+
+- Shopping Analogy
+
+    - Synchronous = going to the grocery store, and shopping for all of your products, one at a time
+
+    - Asynchronous = shopping online, waiting for packages to arrive, you handle each package as they
+                       come in
+
+
+
+- Message Queues
+
+    - A 'message queue' is a component that buffers and distributes asynchronous requests.  Messages
+        are created by the message producers, buffered by the message queue, and delivered to
+        message consumers.
+
+    - Producers and consumers are coupled only by the message format and message queue location.
+
+    - Standard platform-independent formats like XML or JSON are good choices for message formats.
+        It's a good idea to validate the messages you receive strictly.
+
+
+
+- Message Broker
+
+    - Can be implemented in many different ways, from a component backed by a SQL database (as many
+        home-grown queues are) or it could be a dedicated message broker that takes care of 
+        accepting, routing, persisting, and delivering messages.  It could be a simple thread 
+        running in the same application process.
+
+
+    - If the message queue has more responsiblities (ie permission control, routing, failure recovery),
+        it is often implemented as an independent application.  In such a case, we refer to it as
+        a 'message broker'.
+
+    
+    - A message broker:
+
+        - Specialized application designed for fast and flexible message queuing, routing, and delivery. 
+
+        - The more sophisticated way of implementing message queues.
+
+        - Usually provides specialized functionality out of the box.
+
+        - Optimized for high concurrency and high throughput, because being able to enqueue messages fast 
+            is one of their key responsibilities. 
+
+        - May be referred to as message-oriented middleware (MOM) or enterprise service bus (ESB), 
+            depending on the technology used.
+
+
+
+- Message Consumers
+
+    - The 2 most common ways of implementing consumers are:
+
+        1. cron-like
+        2. daemon-like
+
+
+    - A 'cron-like consumer' connects periodically to the queue and checks the status of the queue.
+        If there are messages, it consumes them and stops when the queue is empty.
+
+      This is also called a 'pull model', since the consumer pulls messages from the queue.
+
+
+    - A 'daemon-like consumer' runs constantly in an infinite loop, and usually has a permanent 
+        connection to the message broker.  Instead of checking periodically, it simply blocks on the
+        socket read operation.
+
+      This is also called a 'push model', since messages are pushed by the message broker onto the 
+        consumer as fast as the consumer can process them.
+
+
+    - There are 3 common routing methods used, usually depending on the message broker you are using.
+        They are:
+
+        1. Direct worker queue
+        2. Publish/Subscribe
+        3. Custom routing rules
+
+
+
+- Direct Worker Queue Method
+
+    - In this method, consumers and producers only need to know the name of the queue.  There can be
+        any number of producers and consumers, and a single queue.
+
+      This routing method is well suited for the distribution of time-consuming tasks.
+
+
+    - If the consumers are stateless and uniform, replacement of failed nodes is easy, and scaling
+        becomes trivial.  
+
+    - Common examples include sending out emails, processing videos, resizing images, or uploading
+        content to third-party services.
+
+
+
+- Publish/Subscribe Method
+
+    - Messages are published to a topic, rather than a queue.  Each consumer subscribed to the topic
+        gets the messages.
+
+    - Consumers subscribe to the topic, then when a message is received, it is cloned for each
+        consumer and put into that consumer's private queue.
+
+    - For example, a message is published to a topic every time a purchase is confirmed.  Then we
+        have several consumer services, one which notifies shipping providers, and a different one
+        that processes loyalty program rules, etc.
+
+    - This way, you can add more functionality without having to change existing producers or 
+        consumers at all.
+
+    - This flexible pattern of messaging is a variant of the commonly used Observer pattern,
+        which decouples components and promotes the open/closed principle.
+
+
+
+- Custom Routing Rules
+
+    - Some message brokers support custom routing, where a consumer can decide in more flexible way
+        which messages should be routed to it's queue (ie with pattern matching).
+
+
+    - Logging and alerting are good examples of custom routing based on pattern matching.  You could
+        create a 'Logger Queue' that accepts all log messages, and an 'Alert Queue' that accepts all
+        critical errors.
+
+      Then, you could have a file logger that simply writes all messages from 'Logger Queue' to a file.
+
+
+
+- Messaging Protocols
+
+    - Protocols can be binary or text-based, and can specify just minimal functionality, or they can
+        describe hundreds of features in detail.
+
+
+    - AMQP (Advanced Message Queueing Protocol)
+
+        - Well-defined contract for publishing, industry standard
+        - Has lots of features in protocol spec (ie reliability, delivery guarantees, transactions)
+        - Most programming languages have clients
+
+
+    - STOMP (Streaming Text-Oriented Messaging Protocol)
+
+        - Very minimalist, small libraries, fewer than a dozen operations
+        - Stateless text protocol similar to HTTP
+        - Problems with interoperability
+
+
+    - JMS (Java Message Service)
+
+        - Java messaging standard widely adopted across libraries and Java application servers
+        - Only runs on and integrates well with JVM
+
+
+
+- Messaging Infrastructure
+
+    - If you require throughput of thousands or tens of thousands of messages per second, RabbitMQ
+        or ActiveMQ should work fine out of the box.
+
+      If you need hundreds of thousands, you'll likely need custom sharding mechanisms and multiple
+        broker instances.
+
+
+    - Important Metrics to Consider
+
+        1. Number of messages published per s
+
+        2. Average message size
+
+        3. Number of messages consumed per s
+
+        4. Number of concurrent publishers
+
+        5. Number of concurrent consumers
+
+        6. If message persistence is needed
+
+        7. If message acknowledgment is needed (so messages aren't lost in consumer crash)
