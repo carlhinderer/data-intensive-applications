@@ -108,3 +108,231 @@
 
 
 
+- Wide-Column Storage Example - Online Auction Website (like eBay)
+
+    - Here, we'll start by looking at the use cases we need, which determine the queries we will need.
+
+        1. Users need to be able to sign up and log in.
+
+        2. Logged-in users can view auction details by viewing the item auction page.
+
+        3. The item auction page contains product information like title, description, and images.
+
+        4. The item auction page also includes a list of bids with the names of users who placed them 
+             and the prices they offered.
+
+        5. Users need to be able to change their user name.
+
+        6. Users can view the history of bids of other users by viewing their profile pages.  The user
+             profile page contains details about the user like name and reputation score.
+
+        7. The user profile page shows a list of items that the user placed bids on. Each bid displays 
+             the name of the item, a link to the item auction page, and a price that the user offered.
+
+        8. Your system needs to support hundreds of millions of users and tens of millions of products 
+             with millions of bids each.
+
+
+
+- The Cassandra Data Model
+
+    - The Cassandra data model is often represented as a table with an unlimited number of rows and a
+        nearly unlimited number of arbitrary columns.  Each row can have different columns, and column 
+        names can be made up on the spot.
+
+    - Each row has one key, which is a primary key and a sharding key of the table.  This row key is a
+        string.  It uniquely identifies a single row, and is automatically indexed by Cassandra.
+
+    - Rows are distributed to different servers based on the row key, so all of the data that needs to
+        be accessed together in a single read needs to be stored within a single row.
+
+    - Any time you want to access data, you need to provide both a row key and column name.  Both the
+        rows and columns are indexed.  Because columns are stored in sorted order, you can perform fast 
+        scans on column names to retrieve neighboring columns.
+
+    - Since every row lives on it's own, and there is no table schema definition, there is no way to 
+        efficiently select multiple rows based on a particular column value.
+
+
+    - Here is a example of 2 rows in Cassandra:
+
+        Row #1   (Row Key)           (Columns sorted by column name)
+                 sam@example.org     [dob]        [home_address]      [password]       [post_code]
+                                     1960-01-01   123 Main St         j9v98dvbM        90210
+
+        Row #2   (Row Key)           (Columns sorted by column name)
+                 sarah@example.com   [dob]        [password]          [post_code]      [state]
+                                     1975-01-03   rt89sngrf           98765            CA
+
+
+    - Basically, we can think of all data in Cassandra is being stored in compound indexes.  In fact,
+        many NoSQL modeling techniques can be boiled down to building compound indexes so that data 
+        can be located efficiently.
+
+      As a result, queries that use the index perform very well, and those that do not require a full
+        table scan.
+
+
+
+- Creating the Tables
+
+    - We can create a Users table using the user's email address as the key.  This way, we can find 
+        users easily when they log into the system.  To make sure we always have the user's row key,
+        we can store it in the user's HTTP session or encrypted cookies for the duration of the 
+        visit.
+
+    - You can store all additional attributes of the user in separate columns of each row.  Specify
+        the column names you need to use the column index for better performance.
+
+    - You could model the Items table the same way, with a unique id for each product as the row key.
+        Columns for these rows would store the various item attributes.
+
+
+    - For other use cases, we need to store information about which users placed bids on which items.
+        To be able to execute all of these queries efficiently, we need to store information in a way
+        that is optimized for 2 access patterns:
+
+        1. Get all bids for a particular item
+        2. Get all bids of a particular user
+
+
+    - To allow for these access patterns, we need 2 additional 'indexes', one indexing bids by item id,
+         and one indexing bids by user id.  In order to provide these indexes, we need to create 
+         2 additional Cassandra tables:
+
+         1. item_bids       # Stores bids per item
+         2. user_bids       # Stores bids per user
+
+      We have to update them every time we add a bid.  Luckily, Cassandra is optimized for writes, and
+        this isn't a problem for scalability.
+
+
+
+- The 'item_bids' and 'user_bids' Tables
+
+    - Here, we'll use the trick of making 'timestamp|item_id' the column name in our 'user_bids' table,
+        and we'll make 'timestamp|user_email' the column name in our 'item_bids' table.
+
+      Any time we place a bid, we need to serialize the bid data and issue 2 commands:
+
+          1. Set data [column="$time|$item_id", value={product_details}] in table 'user_bids', row_key
+               $user_email
+
+          2. Set data [column="$time|$user_email", value={product_details}] in table 'item_bids',
+               row_key $item_id
+
+
+    - By using this trick, you can store bids sorted by time and display them on the user's profile
+        page in chronological order.
+
+
+    - For an illustration of this:
+
+        [user_bids Table]
+
+        [row_key = sam@example.org]      1418879899|345632             1395119895|655632
+                                         -----------------             -----------------
+                                         {”product”:{”id”:345632,      {”product”:{”id”:655632
+                                          “name”:”Wall clock”,          “name”:”Samsung Galaxy
+                                          “price”:59.95,                S5”, “price”:350.00,
+                                          “thumbnail”:”http://ex...     “thumbnail”:”http://ex...
+
+
+        [row_key = 345632]        1418879899|sam@example.org           1418879654|otheruser@example.org
+                                  ---------------------------          ----------------------------------
+                                    {”product”:{”id”:345632,           {”product”:{”id”:345632,
+                                     “name”:”Wall clock”,               “name”:”Wall clock”,
+                                     “price”:59.95,                     “price”:59.95,      
+                                     “thumbnail”:”http://ex...          “thumbnail”:”http://ex...
+
+
+
+- Cassandra Notes
+
+    - Instead of creating those 2 new tables, we can use a Cassandra feature called 'column families'.
+        We still end up with denormalized and duplicated data, but we can write data more efficiently.
+
+    - Cassandra is an eventually consistent store, so we are ensured to never miss writes.
+
+
+
+- Search Engines
+
+    - Most web applications need to perform complex search queries.  For instance, an e-commerce
+        platform needs to search products by category, price, brand, location, etc.
+
+      Relational databases will perform poorly if they have to do lots of these kinds of queries.  If
+        you need to allow users to create complex ad-hoc searches, a search engine is a good solution.
+
+
+    - In search engines, consistency and write performance are much less important that performing
+        fast, complex reads.
+
+
+    - Modern search indexes use an 'inverted index', which allows you to search for phrases or 
+        individual words (full text search).
+
+      The indexes we have used so far require you to search for an exact value match or a value prefix.
+        For instance, we can search for rows that start with 'It's a Wonderful Life', but we can't
+        search for 'Life Wonderful' and still get the same results back.
+
+
+    - To index a piece of text, you break text down into tokens, and apply transformations like removing
+        duplicates and plural forms, and lowercasing all the words.  Then, you use the tokens like they
+        are keywords in a book index.
+
+
+        Indexed Documents
+        --------------------------
+        document_id   document_body
+
+        1             The Silence of the Lambs
+        2             All About Eve
+        3             All About My Mother
+        4             The Angry Silence
+        5             The Godfather
+        6             The Godfather 2
+
+
+        Inverted Index
+        -------------------------
+        dictionary    posting_list
+
+        2             6
+        about         2, 3
+        all           2, 3
+        angry         4
+        eve           2
+        godfather     5, 6
+        lamb          1
+        mother        3
+        my            3
+        of            1
+        silence       1, 4
+        the           1, 4, 5, 6
+
+
+    - Search engines need tons of memory, since the indexes themselves are so large.
+
+
+
+- Using a Dedicated Search Engine
+
+    - Building search engines is complex, so you are much better off using an off-the-shelf component
+        like ElasticSearch, Solr, or Sphinx, or a cloud offering like AWS CloudSearch or Azure Search.
+
+
+    - For instance, if you had a user car website, and needed users to be able to search through 
+        millions of cars, you could use ElasticSearch for the search functionality.
+
+      ElasticSearch doesn't require any predefined schema, so you just need to generate JSON documents
+        for each car and post them to be indexed by ElasticSearch.
+
+      
+    - In addition, you'd need to refresh the documents indexed in ElasticSearch to keep the search index
+        in sync with your primary data store any time car metadata changes.
+
+      A common pattern is to use a job queue (since search engines are near real-time anyway).  Any time
+        car metadata is modified, they submit an asynchronous message for this particular car to be
+        reindexed.  A downstream consumer will pick up the message and post the updated document to the
+        search engine.
