@@ -1,0 +1,110 @@
+-----------------------------------------------------------------------------
+| CHAPTER 8 - SEARCHING FOR DATA                                            |
+-----------------------------------------------------------------------------
+
+- Indexing Basics
+
+    - If you have a column with no index on it, you must do a 'full table scan' to search on it.
+        This is the worst-case scenario when it comes to searching, and it has O(n) cost.
+
+    - You can use binary search to get to O(lg n) if the data is sorted.
+
+    - To make lookups faster, we add indexes.  Most indexes are sorted, since searching through a
+        sorted index is much fasting that searching through an unsorted one.
+
+
+
+- Choosing Indexes Based on Cardinality and Distribution
+
+    - To figure out which columns are worth indexing, we consider their cardinality (the number of
+        unique values stored in a particular field).  Fields with high cardinality are good candidates
+        for indexes, since using the index allows you to narrow down to a very small number of rows.
+
+
+    - For example, looking at each of our fields:
+
+        1. Gender = very low cardinality, poor candidate for indexing
+        2. DOB = OK, medium cardinality (25K unique keys)
+        3. First Name = medium (10K unique keys)
+        4. Last Name = medium (10K unique keys)
+        5. Email = very high cardinality, good candidate for indexing
+        6. User Id = assuming they're unique, very high, good candidate for indexing
+
+
+    - Item distribution among the indexes is also important.  Equal distribution would give you the
+        best index performance.
+
+
+    - A 'compound index' (aka a 'composite index') contains more than one field.  It can be used to
+        speed up queries when cardinality and distribution of a single field isn't good enough.
+
+      Note that the ordering of the fields matters when creating these types of indexes.
+
+
+
+- NoSQL Data Modeling
+
+    - To use NoSQL data stores, we need to stop thinking about our data as being stored in tables and
+        think of it as if it were stored in indexes.
+
+      Instead of relying on simple rules of thumb for relational modeling, with huge amounts of data, we
+        need to think much more carefully about use cases, balancing performance vs flexibility.
+
+
+    - The traditional SQL approach:
+
+        1. Think of which data to store, then create entities
+        2. Create relationships between entities using foreign keys
+        3. Iterate over schema design to reduce reduncancy and circular relationships
+
+      Now, you have normalized data.  You can write any queries you want on it.  If we decide later we
+        need better performance from queries, we add an index.
+
+
+    - The NoSQL approach:
+
+        1. Think of the queries first
+        2. Optimize data model for those queries
+
+      After this, you have mostly lost the ability to perform different types of queries.
+
+
+    - Denormalization introduces data redundancies.  All of the copies you have of a piece of data
+        need to be updated on writes.
+
+    - Choosing whether to use a SQL or NoSQL database is essentially a performance vs flexibility
+        trade-off.  Make it wisely!
+
+
+
+- Categories of NoSQL Databases
+
+    - Key-Value Data Stores
+
+        - Simplest data access pattern
+        - Can implement sharding based on the key
+        - Good for 1-to-1 lookups, impractical for sorting or relationships between data
+        - Dynamo and Riak are examples
+        - Memcached is similar, but it doesn't persist data, so it's more of a key/value cache
+        - Redis is key-value store with more features
+
+
+    - Wide Columnar Data Stores
+
+        - Allow you to model data as if it was a compound index
+        - No joins, so denormalization is a standard practice
+        - Scale very well
+        - Usually provide good data partitioning and horizontal scalability out of the box
+        - Good choice for huge data sets like user-generated content, event streams, sensory data
+        - Examples are BigTable, Cassandra, and HBase
+
+
+    - Document-Oriented Data Stores
+
+        - Allow more complex objects to be stored and indexed by the data store
+        - Documents can contain arrays, maps, nested structures like JSON or XML document
+        - Usually allow for more complex indexes to be added to collections of documents
+        - Examples are MongoDB, CouchDB, and Couchbase
+
+
+
