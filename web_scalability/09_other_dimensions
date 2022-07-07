@@ -1,0 +1,145 @@
+-----------------------------------------------------------------------------
+| CHAPTER 9 - OTHER DIMENSIONS OF SCALABILITY                               |
+-----------------------------------------------------------------------------
+
+- Scaling Productivity Through Automation
+
+    - Common areas that can be automated:
+
+        1. Testing
+        2. Build and Deployment
+        3. Monitoring and Alerting
+        4. Log Aggregation
+
+
+
+- Testing
+
+    - The more tests you have, the more confidence you have that you can make changes without breaking
+        things.
+
+    - The majority of your tests will be unit tests, which execute fast and are cheap to maintain.
+
+    - You may also want integration tests and/or end-to-end tests.  Selenium allows you to control a
+        web browser from your tests.
+
+
+
+- Deployment
+
+    - The first step is 'Continuous Integration'.
+
+        - Shared codebase in source control.
+        - Tests are run each time code is committed.
+        - Does not span to deployment, just makes sure code can be built and packaged.
+
+
+    - The second step is 'Continuous Delivery'.
+
+        - In addition to running tests and building, the pipeline also deploys to DEV/STAGE.
+        - Any time a commit is made, it is automatically deployed.
+        - In this case, you can deploy to Production any time you want.
+        - Deployment to production can be done with a single command or button click.
+
+
+    - The final step is 'Continuous Deployment'.
+
+        - Every commit to the shared branch triggers a release to Production if tests pass.
+
+
+
+- Avoiding Breaking Things
+
+    - Write unit tests.  Code coverage should be >85%.
+
+    - Create end-to-end tests for critical paths like signup, login, purchasing an item, etc.
+        Use a tool like Selenium to verify these actually work.
+
+    - Use feature flags to enable and disable features.  This way, you can quickly toggle off a
+        broken feature without redeploying.
+
+    - Use A/B tests and roll out new features on a small subset of users.  You can also gather
+        business-level metrics from this.
+
+    - Use a wide range of monitoring tools.
+
+
+
+- Monitoring and Alerting
+
+    - Monitoring and alerting will greatly reduce your Mean Time To Recovery.
+
+
+    - Metrics will give you a clear picture of your system's performance.  You should collect 4 types
+        of metrics:
+
+        1. Operating System Metrics = CPU, memory, I/O, processes, network, disk
+
+        2. Generic Server Metrics = db transactions, web requests, cache hit ratio, queues, locks
+
+        3. Application Metrics = metrics published by applications
+
+        4. Business Metrics = Track business events like purchases, login failures
+
+
+    - If you give your customers an SLA, you may have an internal SLA monitoring service that
+        connects to your service and detects/corrects any issues with DNS, VPN, SSL, load balancing, etc.
+
+    - We typically having monitoring agents running on each of our servers, watching performance and
+        availability.  Setting all of this up is complicated, so it is usually better to use a third-party
+        service (ie NewRelic).
+
+
+
+- Log Aggregation
+
+    - To be able to effectively search through logs and debug problems, it is very conveient to have
+        all the logs collected in a central location.
+
+    - You could send all log messages to a data store instead of writing them to files, but then the
+        logging service becomes a SPOF.
+
+    - A better solution is to write log files, then have these files shipped off to a central log
+        server.  The log agents can tail the logs on each server, then forward them based on pattern
+        matching.  You can merge them by on the central server by standardizing time zones.
+
+    - Sometimes, you collect so many log statements that searching through them takes forever, and you
+        can use a platform that takes your logs and indexes them.  Examples are Splunk, ELK, Kibana,
+        and Fluentd.
+
+
+
+- Scaling Yourself
+
+    - Overtime is not a way to scale.  Once you burn out, it will take a long time to recover.
+
+    - Manage yourself as if you were managing yourself and all your potential tasks were parts of this
+        project.  
+
+
+    - To reduce work:
+
+        1. Prioritize all tasks
+        2. Cut unnecessary features
+        3. Apply the 80/20 rule
+        4. Automate everything
+
+
+    - To ease deadlines:
+
+        1. Release often
+        2. Only extend deadlines as a last resort
+
+
+    - To increase resources:
+
+        1. Delegate to other people
+        2. Leverage third-party services
+        3. Use commercial tools
+        4. Outsource
+
+
+    - Don't add features you don't explicitly need.  Premature optimization is the root of all evil.
+        Buy anything you possibly can off the shelf.
+
+    - Try not to let one person become the bottleneck on any single project.
