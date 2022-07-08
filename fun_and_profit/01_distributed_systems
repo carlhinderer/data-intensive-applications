@@ -1,0 +1,93 @@
+-----------------------------------------------------------------------------
+| CHAPTER 1 - DISTRIBUTED SYSTEMS                                           |
+-----------------------------------------------------------------------------
+
+- Reasons for Distributed Systems
+
+    - There are 2 basic tasks any computer system needs to accomplish:
+
+        1. Storage
+        2. Computation
+
+
+    - The best value for distributed systems is in using mid-range commodity hardware, as long as
+        maintenance costs can be kept low by fault-tolerant software.
+
+      High-end hardware is mainly useful for computationally intensive tasks.
+
+
+    - This book deals with algorithms for distributed systems within a data center.
+
+
+
+- Scalability
+
+    - 'Scalability' is the ability of a system, network, or process, to handle a growing amount of work 
+        in a capable manner or its ability to be enlarged to accommodate that growth.
+
+
+    - Size Scalability = Adding more nodes makes the system linearly faster
+                       = Growing the dataset should not increase latency
+
+      Geographic Scalability = It should be possible to use multiple data centers to reduce user latency
+                             = Should be able to deal with cross-data center latency in sensible manner
+
+      Administrative Scalability = Adding more nodes should not increase administrative cost
+
+
+
+- Performance (And Latency)
+
+    - 'Performance' is characterized by the amount of work accomplished, compared to the time and resources
+        used.  This might be characterized by:
+
+        1. Short response time
+        2. High throughput
+        3. Low utilization of computing resources
+
+
+
+- Availability (And Fault Tolerance)
+
+    - 'Availability' is the proportion of time your system is in a functioning condition.  If a user
+        cannot access the system, it is unavailable.
+
+    - Distributed systems allow us to take a bunch of unreliable components and build a reliable
+        system on top of them.
+
+    - 'Fault tolerance' is the ability of a system to behave in a well-defined manner once faults
+        occur.
+
+
+
+- Difficulties
+
+    - Distributed systems are constrained by 2 physical factors:
+
+        1. The number of nodes
+        2. The distance between nodes
+
+
+    - Working within those constraints:
+
+        1. The more nodes, the higher the probability of failure
+        2. The more nodes, the more communication between nodes
+        3. Longer geographic distance means higher latency
+
+
+    - The acceptable performance and availability are often defined by an external SLA we have no
+        control over.
+
+
+
+- Partitioning
+
+    - Partitioning and replication are the one-two punch for solving any problem where distributed
+        computing plays a role.
+
+    - 'Partitioning' is dividing the dataset into smaller distinct independent sets, to reduce the
+        impact of dataset growth.
+
+    - 'Replication' is making copies of the same data on multiple machines, to allow multiple servers
+        to take part in the computation.  Replication requires making choices about which consistency
+        model we want to use.
